@@ -10,6 +10,7 @@ public class PlayerMovement : MonoBehaviour {
     public float jumpForce = 10f;
     private Vector2 _moveDirection;
     public bool followCameraRotation = false;
+    public bool IsMoving => _moveDirection != Vector2.zero;
 
     void Start() {
         rb = GetComponent<Rigidbody>();

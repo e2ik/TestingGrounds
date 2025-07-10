@@ -206,8 +206,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.25340134, y: -0.000000018240605, z: 0.0000000047781468, w: 0.9673613}
-  m_LocalPosition: {x: -1.77, y: 4.679, z: -7.556189}
+  m_LocalRotation: {x: 0.028512217, y: 0.11638718, z: -0.0033425598, w: 0.992789}
+  m_LocalPosition: {x: -1.77, y: 3.429, z: -7.556189}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -424,6 +424,7 @@ GameObject:
   - component: {fileID: 454649708}
   - component: {fileID: 454649707}
   - component: {fileID: 454649706}
+  - component: {fileID: 454649712}
   m_Layer: 0
   m_Name: FreeLook Camera
   m_TagString: Untagged
@@ -513,7 +514,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Composition:
-    ScreenPosition: {x: 0, y: 0}
+    ScreenPosition: {x: -0.07045585, y: 0.16435987}
     DeadZone:
       Enabled: 0
       Size: {x: 0.2, y: 0.2}
@@ -526,9 +527,9 @@ MonoBehaviour:
   Damping: {x: 0.5, y: 0.5}
   Lookahead:
     Enabled: 0
-    Time: 0
-    Smoothing: 0
-    IgnoreY: 0
+    Time: 0.387
+    Smoothing: 7.2
+    IgnoreY: 1
 --- !u!114 &454649709
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -543,25 +544,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   TargetOffset: {x: 0, y: 0, z: 0}
   TrackerSettings:
-    BindingMode: 4
+    BindingMode: 0
     PositionDamping: {x: 1, y: 1, z: 1}
     AngularDampingMode: 0
     RotationDamping: {x: 1, y: 1, z: 1}
     QuaternionDamping: 1
   OrbitStyle: 1
-  Radius: 10
+  Radius: 3
   Orbits:
     Top:
-      Radius: 2
-      Height: 5
+      Radius: 3
+      Height: 3
     Center:
       Radius: 4
-      Height: 2.25
+      Height: 1
     Bottom:
-      Radius: 2.5
-      Height: 0.1
-    SplineCurvature: 0.5
-  RecenteringTarget: 2
+      Radius: 3
+      Height: 0
+    SplineCurvature: 1
+  RecenteringTarget: 3
   HorizontalAxis:
     Value: 0
     Center: 0
@@ -643,13 +644,52 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 454649705}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.25340134, y: -0.00000001841287, z: 0.000000005435764, w: 0.9673613}
-  m_LocalPosition: {x: -1.77, y: 4.679, z: -7.556189}
+  m_LocalRotation: {x: 0.028512217, y: 0.11638717, z: -0.0033425598, w: 0.992789}
+  m_LocalPosition: {x: -1.77, y: 3.429, z: -7.556189}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &454649712
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 454649705}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dbe43d662878a7c43bcd44d43c9e2094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CollideAgainst:
+    serializedVersion: 2
+    m_Bits: 1
+  IgnoreTag: 
+  TransparentLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  MinimumDistanceFromTarget: 1
+  AvoidObstacles:
+    Enabled: 1
+    DistanceLimit: 0
+    MinimumOcclusionTime: 0
+    CameraRadius: 0.4
+    UseFollowTarget:
+      Enabled: 0
+      YOffset: 0
+    Strategy: 0
+    MaximumEffort: 4
+    SmoothingTime: 0
+    Damping: 1
+    DampingWhenOccluded: 0.2
+  ShotQualityEvaluation:
+    Enabled: 0
+    OptimalDistance: 10
+    NearLimit: 5
+    FarLimit: 30
+    MaxQualityBoost: 0.2
 --- !u!1 &598644821
 GameObject:
   m_ObjectHideFlags: 0
@@ -904,7 +944,8 @@ MonoBehaviour:
     m_Bits: 64
   DrawGizmo: 1
   groundColliderOffset: 0.3
-  maxSlopeAngle: 45
+  colliderSize: 0.8
+  maxSlopeAngle: 50
   defaultMaterial: {fileID: 13400000, guid: 1b678f928ee09e0499c4c26d0f6e1bdb, type: 2}
   slideMaterial: {fileID: 13400000, guid: 0a81cc2788afa4849bf761630d79c995, type: 2}
   wallAngleThreshold: 60

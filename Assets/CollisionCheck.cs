@@ -9,22 +9,34 @@ public class CollisionCheck : MonoBehaviour {
     public bool IsGrounded => CheckIsGrounded();
     private CapsuleCollider capsuleCollider;
     [SerializeField] private float groundColliderOffset = 0.2f;
+    [SerializeField] private float colliderSize = 0.8f;
     private RaycastHit lastGroundHit;
     [Range(0f, 89f)]
     public float maxSlopeAngle = 45f;
+    private bool onWall = false;
 
     public PhysicsMaterial defaultMaterial;
     public PhysicsMaterial slideMaterial;
     public float wallAngleThreshold;
 
+    private PlayerMovement playerMovement;
+
 
     void Start() {
         capsuleCollider = GetComponent<CapsuleCollider>();
         capsuleCollider.material = defaultMaterial;
+        playerMovement = GetComponent<PlayerMovement>();
     }
 
     void Update() {
-        capsuleCollider.material = CheckIsGrounded() ? defaultMaterial : slideMaterial;
+        if (IsGrounded && onWall) {
+            if (playerMovement.IsMoving) capsuleCollider.material = slideMaterial;
+            else capsuleCollider.material = defaultMaterial;
+        } else if (!IsGrounded) {
+            capsuleCollider.material = slideMaterial;
+        } else if (IsGrounded && !onWall) {
+            capsuleCollider.material = defaultMaterial;
+        }
     }
 
     public bool CheckIsGrounded() {
@@ -35,7 +47,7 @@ public class CollisionCheck : MonoBehaviour {
             capsuleCollider.bounds.min.y + groundColliderOffset,
             capsuleCollider.bounds.center.z
         );
-        Vector3 boxHalfExtents = new(capsuleCollider.radius * 0.7f, 0.1f, capsuleCollider.radius * 0.7f);
+        Vector3 boxHalfExtents = new(capsuleCollider.radius * colliderSize, 0.1f, capsuleCollider.radius * colliderSize);
         
         RaycastHit[] hits  = Physics.BoxCastAll(
             colliderBottom,
@@ -91,9 +103,9 @@ public class CollisionCheck : MonoBehaviour {
         );
 
         Vector3 boxSize = new Vector3(
-            capsuleCollider.radius * 2f * 0.7f,
+            capsuleCollider.radius * 2f * colliderSize,
             0.1f,
-            capsuleCollider.radius * 2f * 0.7f
+            capsuleCollider.radius * 2f * colliderSize
         );
 
         Vector3 boxCenter = bottom + Vector3.down * groundCheckDistance;
@@ -101,23 +113,21 @@ public class CollisionCheck : MonoBehaviour {
         Gizmos.DrawWireCube(boxCenter, boxSize);
     }
 
-    // void OnCollisionStay(Collision collision) {
-    //     bool onWall = false;
+    // ? Below could be useful for wall climbing later
+    void OnCollisionStay(Collision collision) {
 
-    //     foreach (ContactPoint contact in collision.contacts) {
-    //         Vector3 normal = contact.normal;
-    //         float angle = Vector3.Angle(normal, Vector3.up);
+        foreach (ContactPoint contact in collision.contacts) {
+            Vector3 normal = contact.normal;
+            float angle = Vector3.Angle(normal, Vector3.up);
             
-    //         if (angle >= wallAngleThreshold) {
-    //             onWall = true;
-    //             break;
-    //         }
-    //     }
-    //     capsuleCollider.material = onWall ? slideMaterial : defaultMaterial;
-    // }
+            if (angle >= wallAngleThreshold) {
+                onWall = true;
+                break;
+            }
+        }
+    }
 
-    // void OnCollisionExit(Collision collision) {
-    //     capsuleCollider.material = defaultMaterial;        
-    // }
-
+    void OnCollisionExit(Collision collision) {
+        onWall = false;       
+    }
 }
