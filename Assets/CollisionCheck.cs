@@ -101,23 +101,23 @@ public class CollisionCheck : MonoBehaviour {
         Gizmos.DrawWireCube(boxCenter, boxSize);
     }
 
-    void OnCollisionStay(Collision collision) {
-        bool onWall = false;
+    // void OnCollisionStay(Collision collision) {
+    //     bool onWall = false;
 
-        foreach (ContactPoint contact in collision.contacts) {
-            Vector3 normal = contact.normal;
-            float angle = Vector3.Angle(normal, Vector3.up);
+    //     foreach (ContactPoint contact in collision.contacts) {
+    //         Vector3 normal = contact.normal;
+    //         float angle = Vector3.Angle(normal, Vector3.up);
             
-            if (angle >= wallAngleThreshold) {
-                onWall = true;
-                break;
-            }
-        }
-        capsuleCollider.material = onWall ? slideMaterial : defaultMaterial;
-    }
+    //         if (angle >= wallAngleThreshold) {
+    //             onWall = true;
+    //             break;
+    //         }
+    //     }
+    //     capsuleCollider.material = onWall ? slideMaterial : defaultMaterial;
+    // }
 
-    void OnCollisionExit(Collision collision) {
-        capsuleCollider.material = defaultMaterial;        
-    }
+    // void OnCollisionExit(Collision collision) {
+    //     capsuleCollider.material = defaultMaterial;        
+    // }
 
 }
