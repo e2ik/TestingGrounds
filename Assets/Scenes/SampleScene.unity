@@ -924,7 +924,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   acceleration: 8
   maxSpeed: 6
-  sprintMaxSpeed: 8
+  sprintMaxSpeed: 9
   jumpForce: 8
   sprintForce: 9
   followCameraRotation: 1

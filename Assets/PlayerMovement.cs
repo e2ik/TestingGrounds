@@ -26,7 +26,9 @@ public class PlayerMovement : MonoBehaviour {
     void OnEnable() {
         playerInput.actions["Move"].performed += OnMove;
         playerInput.actions["Move"].canceled += OnMove;
+
         playerInput.actions["Jump"].performed += OnJump;
+
         playerInput.actions["Sprint"].started += OnSprint;
         playerInput.actions["Sprint"].performed += OnSprint;
         playerInput.actions["Sprint"].canceled += OnSprint;
@@ -35,7 +37,9 @@ public class PlayerMovement : MonoBehaviour {
     void OnDisable() {
         playerInput.actions["Move"].performed -= OnMove;
         playerInput.actions["Move"].canceled -= OnMove;
+
         playerInput.actions["Jump"].performed -= OnJump;
+        
         playerInput.actions["Sprint"].started -= OnSprint;
         playerInput.actions["Sprint"].performed -= OnSprint;
         playerInput.actions["Sprint"].canceled -= OnSprint;
@@ -76,7 +80,6 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void OnSprint(InputAction.CallbackContext context) {
-        // Immediate dash on press
         if (context.started) {
             var inputDir = new Vector3(_moveDirection.x, 0, _moveDirection.y).normalized;
 
@@ -85,20 +88,19 @@ public class PlayerMovement : MonoBehaviour {
             }
 
             if (inputDir != Vector3.zero && collisionCheck.IsGrounded) {
-                rb.AddForce(inputDir * sprintForce, ForceMode.VelocityChange);
-                Debug.Log("Sprint boost (started)");
+                float horizontalSpeed = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z).magnitude;
+                if (horizontalSpeed < sprintMaxSpeed) {
+                    rb.AddForce(inputDir * sprintForce, ForceMode.VelocityChange);
+                }
             }
         }
 
-        // Held sprint logic
         if (context.performed && context.interaction is HoldInteraction) {
             isSprinting = true;
-            Debug.Log("HoldInteraction performed → Sprinting mode");
         }
 
         if (context.canceled) {
             isSprinting = false;
-            Debug.Log("Sprint canceled");
 
             if (_moveDirection == Vector2.zero) {
                 cancelledMovement = true;
