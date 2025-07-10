@@ -1,9 +1,11 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Interactions;
 
 public class PlayerMovement : MonoBehaviour {
 
     private Rigidbody rb;
+    private PlayerInput playerInput;
     private CollisionCheck collisionCheck;
     public float acceleration = 10f;
     public float maxSpeed = 10f;
@@ -11,6 +13,26 @@ public class PlayerMovement : MonoBehaviour {
     private Vector2 _moveDirection;
     public bool followCameraRotation = false;
     public bool IsMoving => _moveDirection != Vector2.zero;
+    private bool cancelledMovement = false;
+    [Range(30f, 50f)] private float momemtum = 40f;
+
+    void Awake() {
+        playerInput = GetComponent<PlayerInput>();
+    }
+
+    void OnEnable() {
+        playerInput.actions["Move"].performed += OnMove;
+        playerInput.actions["Move"].canceled += OnMove;
+        playerInput.actions["Jump"].performed += OnJump;
+        playerInput.actions["Sprint"].performed += OnSprint;
+    }
+
+    void OnDisable() {
+        playerInput.actions["Move"].performed -= OnMove;
+        playerInput.actions["Move"].canceled -= OnMove;
+        playerInput.actions["Jump"].performed -= OnJump;
+        playerInput.actions["Sprint"].performed -= OnSprint;
+    }
 
     void Start() {
         rb = GetComponent<Rigidbody>();
@@ -19,15 +41,46 @@ public class PlayerMovement : MonoBehaviour {
 
     void FixedUpdate() {
         MovementLogic();
+        if (cancelledMovement) StopMovement();
     }
 
-    void OnMove(InputValue value) {
-        _moveDirection = value.Get<Vector2>();
+    void OnMove(InputAction.CallbackContext context) {
+        if (context.canceled) {
+            cancelledMovement = true;
+        } else {
+            cancelledMovement = false;
+            _moveDirection = context.ReadValue<Vector2>();
+        }
     }
 
-    void OnJump(InputValue value) {
-        if (value.isPressed && collisionCheck.IsGrounded) {
+    void StopMovement() {
+        if (_moveDirection.magnitude > 0.01f) {
+            _moveDirection = Vector2.Lerp(_moveDirection, Vector2.zero, momemtum * Time.fixedDeltaTime);
+        } else {
+            _moveDirection = Vector2.zero;
+            cancelledMovement = false;
+        }
+    }
+
+    void OnJump(InputAction.CallbackContext context) {
+        if (context.performed && collisionCheck.IsGrounded) {
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
+        }
+    }
+
+    void OnSprint(InputAction.CallbackContext context) {
+        if (context.started) {
+            Debug.Log("Sprinting!");
+        }
+
+        if (context.performed) {
+            if (context.interaction is HoldInteraction) {
+                Debug.Log("Hold performed");
+            } else if (context.interaction is PressInteraction) {
+                Debug.Log("Press performed");
+            } else {
+                Debug.Log("Unknown interaction");
+            }
         }
     }
 

@@ -4,7 +4,6 @@ using UnityEngine;
 public class CollisionCheck : MonoBehaviour {
 
     public float groundCheckDistance = 1.5f;
-    public LayerMask groundLayer;
     public bool DrawGizmo = true;
     public bool IsGrounded => CheckIsGrounded();
     private CapsuleCollider capsuleCollider;
@@ -54,8 +53,7 @@ public class CollisionCheck : MonoBehaviour {
             boxHalfExtents,
             Vector3.down,
             Quaternion.identity,
-            groundCheckDistance,
-            groundLayer
+            groundCheckDistance
         );
 
         if (hits.Length == 0) return false;
@@ -66,6 +64,7 @@ public class CollisionCheck : MonoBehaviour {
         bool foundValid = false;
 
         foreach (var hit in hits) {
+            if (hit.collider == capsuleCollider) continue;
             float alignment = Vector3.Dot(hit.normal, Vector3.up);
             if (alignment >= minDot && alignment > bestAlignment) {
                 bestAlignment = alignment;
@@ -83,8 +82,7 @@ public class CollisionCheck : MonoBehaviour {
     }
 
     public bool TryGetGroundNormal(out Vector3 normal) {
-        bool grounded = CheckIsGrounded();
-        if (grounded) {
+        if (IsGrounded) {
             normal = lastGroundHit.normal;
             return true;
         }
