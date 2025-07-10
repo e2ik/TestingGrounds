@@ -9,12 +9,15 @@ public class PlayerMovement : MonoBehaviour {
     private CollisionCheck collisionCheck;
     public float acceleration = 10f;
     public float maxSpeed = 10f;
+    public float sprintMaxSpeed = 20f;
     public float jumpForce = 10f;
+    public float sprintForce = 10f;
     private Vector2 _moveDirection;
     public bool followCameraRotation = false;
     public bool IsMoving => _moveDirection != Vector2.zero;
     private bool cancelledMovement = false;
-    [Range(30f, 50f)] private float momemtum = 40f;
+    [Range(30f, 70f), SerializeField] private float momentum = 40f;
+    private bool isSprinting = false;
 
     void Awake() {
         playerInput = GetComponent<PlayerInput>();
@@ -24,14 +27,18 @@ public class PlayerMovement : MonoBehaviour {
         playerInput.actions["Move"].performed += OnMove;
         playerInput.actions["Move"].canceled += OnMove;
         playerInput.actions["Jump"].performed += OnJump;
+        playerInput.actions["Sprint"].started += OnSprint;
         playerInput.actions["Sprint"].performed += OnSprint;
+        playerInput.actions["Sprint"].canceled += OnSprint;
     }
 
     void OnDisable() {
         playerInput.actions["Move"].performed -= OnMove;
         playerInput.actions["Move"].canceled -= OnMove;
         playerInput.actions["Jump"].performed -= OnJump;
+        playerInput.actions["Sprint"].started -= OnSprint;
         playerInput.actions["Sprint"].performed -= OnSprint;
+        playerInput.actions["Sprint"].canceled -= OnSprint;
     }
 
     void Start() {
@@ -55,7 +62,7 @@ public class PlayerMovement : MonoBehaviour {
 
     void StopMovement() {
         if (_moveDirection.magnitude > 0.01f) {
-            _moveDirection = Vector2.Lerp(_moveDirection, Vector2.zero, momemtum * Time.fixedDeltaTime);
+            _moveDirection = Vector2.Lerp(_moveDirection, Vector2.zero, momentum * Time.fixedDeltaTime);
         } else {
             _moveDirection = Vector2.zero;
             cancelledMovement = false;
@@ -69,41 +76,49 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void OnSprint(InputAction.CallbackContext context) {
+        // Immediate dash on press
         if (context.started) {
-            Debug.Log("Sprinting!");
+            var inputDir = new Vector3(_moveDirection.x, 0, _moveDirection.y).normalized;
+
+            if (followCameraRotation) {
+                inputDir = TranformToCameraRotation().normalized;
+            }
+
+            if (inputDir != Vector3.zero && collisionCheck.IsGrounded) {
+                rb.AddForce(inputDir * sprintForce, ForceMode.VelocityChange);
+                Debug.Log("Sprint boost (started)");
+            }
         }
 
-        if (context.performed) {
-            if (context.interaction is HoldInteraction) {
-                Debug.Log("Hold performed");
-            } else if (context.interaction is PressInteraction) {
-                Debug.Log("Press performed");
-            } else {
-                Debug.Log("Unknown interaction");
+        // Held sprint logic
+        if (context.performed && context.interaction is HoldInteraction) {
+            isSprinting = true;
+            Debug.Log("HoldInteraction performed → Sprinting mode");
+        }
+
+        if (context.canceled) {
+            isSprinting = false;
+            Debug.Log("Sprint canceled");
+
+            if (_moveDirection == Vector2.zero) {
+                cancelledMovement = true;
             }
         }
     }
 
     void MovementLogic() {
-        Transform cam = Camera.main.transform;
-        Vector3 camForward = cam.forward;
-        Vector3 camRight = cam.right;
-        camForward.y = 0;
-        camRight.y = 0;
-        camForward.Normalize();
-        camRight.Normalize();
-
         Vector3 inputDir = new Vector3(_moveDirection.x, 0, _moveDirection.y).normalized;
         float horizontalSpeed = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z).magnitude;
 
         if (followCameraRotation) {
-            inputDir = (camForward * _moveDirection.y + camRight * _moveDirection.x).normalized;
+            inputDir = TranformToCameraRotation().normalized;
         }
 
-        if (horizontalSpeed < maxSpeed) {
+        float targetMaxSpeed = isSprinting ? sprintMaxSpeed : maxSpeed;
+        if (horizontalSpeed < targetMaxSpeed) {
             if (collisionCheck.TryGetGroundNormal(out Vector3 normal)) {
                 Vector3 slopeDir = Vector3.ProjectOnPlane(inputDir, normal).normalized;
-                float adjustForce = (maxSpeed - horizontalSpeed) * acceleration;
+                float adjustForce = (targetMaxSpeed - horizontalSpeed) * acceleration;
                 rb.AddForce(slopeDir * adjustForce, ForceMode.Acceleration);
             } else {
                 rb.AddForce(inputDir * acceleration, ForceMode.Acceleration);
@@ -114,5 +129,17 @@ public class PlayerMovement : MonoBehaviour {
             Quaternion targetRotation = Quaternion.LookRotation(inputDir, Vector3.up);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.fixedDeltaTime);
         }
+    }
+
+    // helpers
+    Vector3 TranformToCameraRotation() {
+        Transform cam = Camera.main.transform;
+        Vector3 camForward = cam.forward;
+        Vector3 camRight = cam.right;
+        camForward.y = 0;
+        camRight.y = 0;
+        camForward.Normalize();
+        camRight.Normalize();
+        return camForward * _moveDirection.y + camRight * _moveDirection.x;
     }
 }
