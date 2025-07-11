@@ -119,32 +119,10 @@ public class PlayerMovement : MonoBehaviour {
 
     void OnJump(InputAction.CallbackContext context) {;
         if (context.performed) {
-            if (collisionCheck.IsGrounded) {
-                ApplyJumpForce(jumpForce);
-            } else {
-                if (Time.time - lastGroundedTime <= coyoteTime) {
-                    Vector3 velocty = rb.linearVelocity;
-                    if (velocty.y < 0) {
-                        ApplyJumpForce(jumpForce);
-                        inCoyote = true;
-                    }
-                }
+            if (collisionCheck.IsGrounded) { ApplyJumpForce(jumpForce); return;}
+            else { HandleCoyote(); }
 
-                if (jumpCounter >= jumpAmount) return;
-                if (canDoubleJump) {
-                    if (zeroVelocityOnDoubleJump) {
-                        Vector3 velocty = rb.linearVelocity;
-                        velocty.y = 0f;
-                        rb.linearVelocity = velocty;
-                    }
-                    ApplyJumpForce(jumpForce * jumpMultiplier);
-                    if (!inCoyote) {
-                        jumpCounter++;
-                    } else {
-                        inCoyote = false;
-                    }
-                } 
-            }
+            if (canDoubleJump) { HandleDoubleJump(); }
         }
     }
 
@@ -220,6 +198,28 @@ public class PlayerMovement : MonoBehaviour {
             }
             rb.AddForce(inputDir * sprintForce, ForceMode.VelocityChange);
         }
+    }
+
+    void HandleCoyote() {
+        if (Time.time - lastGroundedTime <= coyoteTime) {
+            Vector3 velocty = rb.linearVelocity;
+            if (velocty.y < 0) {
+                ApplyJumpForce(jumpForce);
+                inCoyote = true;
+            }
+        }
+    }
+
+    void HandleDoubleJump() {
+        if (jumpCounter >= jumpAmount) return;
+        if (zeroVelocityOnDoubleJump) {
+            Vector3 velocty = rb.linearVelocity;
+            velocty.y = 0f;
+            rb.linearVelocity = velocty;
+        }
+        ApplyJumpForce(jumpForce * jumpMultiplier);
+        if (!inCoyote) { jumpCounter++; }
+        else { inCoyote = false; }
     }
 
     // helpers

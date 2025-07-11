@@ -927,11 +927,15 @@ MonoBehaviour:
   sprintMaxSpeed: 10
   jumpForce: 8
   sprintForce: 10
-  followCameraRotation: 1
   momentum: 60
   dashHasGravity: 0
   dashDistance: 2.5
   dashAmount: 1
+  canDoubleJump: 1
+  zeroVelocityOnDoubleJump: 1
+  followCameraRotation: 1
+  coyoteTime: 0.15
+  jumpMultiplier: 1.2
 --- !u!114 &855627874
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1302,7 +1306,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1903562635}
-  m_Material: {fileID: 13400000, guid: 0a81cc2788afa4849bf761630d79c995, type: 2}
+  m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
