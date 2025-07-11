@@ -12,14 +12,21 @@ public class PlayerMovement : MonoBehaviour {
     public float sprintForce = 10f;
     [Range(30f, 70f), SerializeField] private float momentum = 40f;
 
-    [Header("Dash Values")]
+    [Header("Dash Settings")]
     public bool dashHasGravity = true;
     public float dashDistance = 5f;
-    public int dashAmount = 1;    
+    public int dashAmount = 1;
+
+    [Header("Double Jump Settings")]
+    public bool canDoubleJump = false;
+    private int jumpAmount = 1;
+    private int jumpCounter = 0; // can add more jumps in future if needed
+    public bool zeroVelocityOnDoubleJump = false;
 
     [Header("Misc Settings")]
     public bool followCameraRotation = false;
     public float coyoteTime = 0.15f;
+    public float jumpMultiplier = 0.5f;
 
     private Rigidbody rb;
     private PlayerInput playerInput;
@@ -32,6 +39,7 @@ public class PlayerMovement : MonoBehaviour {
     private bool isSprinting = false;
     private bool isDashing = false;
     private float lastGroundedTime = 0f;
+    private bool inCoyote = false;
 
     void Awake() {
         playerInput = GetComponent<PlayerInput>();
@@ -65,8 +73,11 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void Update() {
+        Debug.Log("Jump Counter: " + jumpCounter);
         if (collisionCheck.IsGrounded) {
             lastGroundedTime = Time.time;
+            jumpCounter = 0;
+            inCoyote = false;
         }
     }
 
@@ -109,12 +120,30 @@ public class PlayerMovement : MonoBehaviour {
     void OnJump(InputAction.CallbackContext context) {;
         if (context.performed) {
             if (collisionCheck.IsGrounded) {
-                rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
+                ApplyJumpForce(jumpForce);
             } else {
                 if (Time.time - lastGroundedTime <= coyoteTime) {
                     Vector3 velocty = rb.linearVelocity;
-                    if (velocty.y < 0) rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
-                }     
+                    if (velocty.y < 0) {
+                        ApplyJumpForce(jumpForce);
+                        inCoyote = true;
+                    }
+                }
+
+                if (jumpCounter >= jumpAmount) return;
+                if (canDoubleJump) {
+                    if (zeroVelocityOnDoubleJump) {
+                        Vector3 velocty = rb.linearVelocity;
+                        velocty.y = 0f;
+                        rb.linearVelocity = velocty;
+                    }
+                    ApplyJumpForce(jumpForce * jumpMultiplier);
+                    if (!inCoyote) {
+                        jumpCounter++;
+                    } else {
+                        inCoyote = false;
+                    }
+                } 
             }
         }
     }
@@ -203,5 +232,9 @@ public class PlayerMovement : MonoBehaviour {
         camForward.Normalize();
         camRight.Normalize();
         return camForward * _moveDirection.y + camRight * _moveDirection.x;
+    }
+
+    void ApplyJumpForce(float force) {
+        rb.linearVelocity = new Vector3(rb.linearVelocity.x, force, rb.linearVelocity.z);
     }
 }
