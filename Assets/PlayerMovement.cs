@@ -73,30 +73,13 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void Update() {
-        Debug.Log("Jump Counter: " + jumpCounter);
-        if (collisionCheck.IsGrounded) {
-            lastGroundedTime = Time.time;
-            jumpCounter = 0;
-            inCoyote = false;
-        }
+        UpdateJump();
+        UpdateDash();
     }
 
     void FixedUpdate() {
-        if (dashCounter != 0 && collisionCheck.IsGrounded) dashCounter = 0;
         MovementLogic();
         if (cancelledMovement) StopMovement();
-        if (isDashing && !dashHasGravity) {
-            float dashTravelled = Vector3.Distance(dashStartPos, transform.position);
-            if (dashTravelled > dashDistance) {
-                rb.useGravity = true;
-                isDashing = false;
-            } else {
-                if (collisionCheck.IsGrounded || collisionCheck.hasCollided) {
-                    rb.useGravity = true;
-                    isDashing = false;
-                }
-            }
-        }
     }
 
     void OnMove(InputAction.CallbackContext context) {
@@ -220,6 +203,30 @@ public class PlayerMovement : MonoBehaviour {
         ApplyJumpForce(jumpForce * jumpMultiplier);
         if (!inCoyote) { jumpCounter++; }
         else { inCoyote = false; }
+    }
+
+    void UpdateJump() {
+        if (collisionCheck.IsGrounded) {
+            lastGroundedTime = Time.time;
+            jumpCounter = 0;
+            inCoyote = false;
+        }
+    }
+
+    void UpdateDash() {
+        if (dashCounter != 0 && collisionCheck.IsGrounded) dashCounter = 0;
+        if (isDashing && !dashHasGravity) {
+            float dashTravelled = Vector3.Distance(dashStartPos, transform.position);
+            if (dashTravelled > dashDistance) {
+                rb.useGravity = true;
+                isDashing = false;
+            } else {
+                if (collisionCheck.IsGrounded || collisionCheck.hasCollided) {
+                    rb.useGravity = true;
+                    isDashing = false;
+                }
+            }
+        }
     }
 
     // helpers
