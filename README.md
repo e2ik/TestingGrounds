@@ -1,6 +1,5 @@
 Jul 11:
 
-- Work on dash (affected by gravity or not)
 - Double Jumnping 
 - Make sure both of these are toggles
 

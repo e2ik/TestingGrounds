@@ -922,13 +922,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f8b79bacaa98f14e8b40d1dcc87bcae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  acceleration: 8
-  maxSpeed: 6
-  sprintMaxSpeed: 9
+  acceleration: 9
+  maxSpeed: 7
+  sprintMaxSpeed: 10
   jumpForce: 8
-  sprintForce: 9
+  sprintForce: 10
   followCameraRotation: 1
   momentum: 60
+  dashHasGravity: 0
+  dashDistance: 2.5
+  dashAmount: 1
 --- !u!114 &855627874
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -943,6 +946,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   groundCheckDistance: 0.2
   DrawGizmo: 1
+  hasCollided: 0
   groundColliderOffset: 0.3
   colliderSize: 0.8
   maxSlopeAngle: 50

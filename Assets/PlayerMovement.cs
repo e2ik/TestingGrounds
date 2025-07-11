@@ -18,6 +18,12 @@ public class PlayerMovement : MonoBehaviour {
     private bool cancelledMovement = false;
     [Range(30f, 70f), SerializeField] private float momentum = 40f;
     private bool isSprinting = false;
+    private bool isDashing = false;
+    public bool dashHasGravity = true;
+    public float dashDistance = 5f;
+    public int dashAmount = 1;
+    private int dashCounter = 0;
+    private Vector3 dashStartPos;
 
     void Awake() {
         playerInput = GetComponent<PlayerInput>();
@@ -51,8 +57,21 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void FixedUpdate() {
+        if (dashCounter != 0 && collisionCheck.IsGrounded) dashCounter = 0;
         MovementLogic();
         if (cancelledMovement) StopMovement();
+        if (isDashing && !dashHasGravity) {
+            float dashTravelled = Vector3.Distance(dashStartPos, transform.position);
+            if (dashTravelled > dashDistance) {
+                rb.useGravity = true;
+                isDashing = false;
+            } else {
+                if (collisionCheck.IsGrounded || collisionCheck.hasCollided) {
+                    rb.useGravity = true;
+                    isDashing = false;
+                }
+            }
+        }
     }
 
     void OnMove(InputAction.CallbackContext context) {
@@ -81,18 +100,7 @@ public class PlayerMovement : MonoBehaviour {
 
     void OnSprint(InputAction.CallbackContext context) {
         if (context.started) {
-            var inputDir = new Vector3(_moveDirection.x, 0, _moveDirection.y).normalized;
-
-            if (followCameraRotation) {
-                inputDir = TranformToCameraRotation().normalized;
-            }
-
-            if (inputDir != Vector3.zero && collisionCheck.IsGrounded) {
-                float horizontalSpeed = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z).magnitude;
-                if (horizontalSpeed < sprintMaxSpeed) {
-                    rb.AddForce(inputDir * sprintForce, ForceMode.VelocityChange);
-                }
-            }
+            PerformDash();
         }
 
         if (context.performed && context.interaction is HoldInteraction) {
@@ -130,6 +138,37 @@ public class PlayerMovement : MonoBehaviour {
         if (inputDir != Vector3.zero) {
             Quaternion targetRotation = Quaternion.LookRotation(inputDir, Vector3.up);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.fixedDeltaTime);
+        }
+    }
+
+    void PerformDash() {
+        if (dashCounter >= dashAmount) return;
+        if (!collisionCheck.IsGrounded) dashCounter++;
+
+        Vector3 inputDir;
+
+        if (_moveDirection != Vector2.zero) {
+            inputDir = new Vector3(_moveDirection.x, 0, _moveDirection.y).normalized;
+
+            if (followCameraRotation) {
+                inputDir = TranformToCameraRotation().normalized;
+            }
+        } else {
+            inputDir = transform.forward;
+        }
+
+        float horizontalSpeed = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z).magnitude;
+        if (horizontalSpeed < sprintMaxSpeed) {
+            if (!dashHasGravity) {
+                rb.useGravity = false;
+                isDashing = true;
+                dashStartPos = transform.position;
+                Vector3 velocity = rb.linearVelocity;
+                velocity.y = 0;
+                rb.linearVelocity = velocity;
+
+            }
+            rb.AddForce(inputDir * sprintForce, ForceMode.VelocityChange);
         }
     }
 

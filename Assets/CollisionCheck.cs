@@ -6,6 +6,7 @@ public class CollisionCheck : MonoBehaviour {
     public float groundCheckDistance = 1.5f;
     public bool DrawGizmo = true;
     public bool IsGrounded => CheckIsGrounded();
+    public bool hasCollided = false;
     private CapsuleCollider capsuleCollider;
     [SerializeField] private float groundColliderOffset = 0.2f;
     [SerializeField] private float colliderSize = 0.8f;
@@ -120,6 +121,7 @@ public class CollisionCheck : MonoBehaviour {
             
             if (angle >= wallAngleThreshold) {
                 onWall = true;
+                hasCollided = true;
                 break;
             }
         }
@@ -127,5 +129,6 @@ public class CollisionCheck : MonoBehaviour {
 
     void OnCollisionExit(Collision collision) {
         onWall = false;       
+        hasCollided = false;
     }
 }
