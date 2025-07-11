@@ -4,26 +4,34 @@ using UnityEngine.InputSystem.Interactions;
 
 public class PlayerMovement : MonoBehaviour {
 
-    private Rigidbody rb;
-    private PlayerInput playerInput;
-    private CollisionCheck collisionCheck;
+    [Header("Movement Forces")]
     public float acceleration = 10f;
     public float maxSpeed = 10f;
     public float sprintMaxSpeed = 20f;
     public float jumpForce = 10f;
     public float sprintForce = 10f;
-    private Vector2 _moveDirection;
-    public bool followCameraRotation = false;
-    public bool IsMoving => _moveDirection != Vector2.zero;
-    private bool cancelledMovement = false;
     [Range(30f, 70f), SerializeField] private float momentum = 40f;
-    private bool isSprinting = false;
-    private bool isDashing = false;
+
+    [Header("Dash Values")]
     public bool dashHasGravity = true;
     public float dashDistance = 5f;
-    public int dashAmount = 1;
-    private int dashCounter = 0;
+    public int dashAmount = 1;    
+
+    [Header("Misc Settings")]
+    public bool followCameraRotation = false;
+    public float coyoteTime = 0.15f;
+
+    private Rigidbody rb;
+    private PlayerInput playerInput;
+    private CollisionCheck collisionCheck;
     private Vector3 dashStartPos;
+    private int dashCounter = 0;
+    private Vector2 _moveDirection;
+    private bool cancelledMovement = false;
+    public bool IsMoving => _moveDirection != Vector2.zero;
+    private bool isSprinting = false;
+    private bool isDashing = false;
+    private float lastGroundedTime = 0f;
 
     void Awake() {
         playerInput = GetComponent<PlayerInput>();
@@ -54,6 +62,12 @@ public class PlayerMovement : MonoBehaviour {
     void Start() {
         rb = GetComponent<Rigidbody>();
         collisionCheck = GetComponent<CollisionCheck>();
+    }
+
+    void Update() {
+        if (collisionCheck.IsGrounded) {
+            lastGroundedTime = Time.time;
+        }
     }
 
     void FixedUpdate() {
@@ -92,9 +106,16 @@ public class PlayerMovement : MonoBehaviour {
         }
     }
 
-    void OnJump(InputAction.CallbackContext context) {
-        if (context.performed && collisionCheck.IsGrounded) {
-            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
+    void OnJump(InputAction.CallbackContext context) {;
+        if (context.performed) {
+            if (collisionCheck.IsGrounded) {
+                rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
+            } else {
+                if (Time.time - lastGroundedTime <= coyoteTime) {
+                    Vector3 velocty = rb.linearVelocity;
+                    if (velocty.y < 0) rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
+                }     
+            }
         }
     }
 
