@@ -244,4 +244,8 @@ public class PlayerMovement : MonoBehaviour {
     void ApplyJumpForce(float force) {
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, force, rb.linearVelocity.z);
     }
+
+    public bool HasMoveInput() {
+        return _moveDirection.sqrMagnitude > 0.01f;
+    }
 }

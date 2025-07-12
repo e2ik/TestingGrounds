@@ -1,4 +1,3 @@
-Jul 12:
+July 13:
 
-- Start testing some slopes + steps
-- Might need to add to the CollisionCheck class
+- Get some simple Assets start working on animations
