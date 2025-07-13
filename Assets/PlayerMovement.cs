@@ -14,7 +14,9 @@ public class PlayerMovement : MonoBehaviour {
     [field: SerializeField] public float SprintMaxSpeed { get; private set; } = 10f;
     [SerializeField] private float _jumpForce = 8f;
     [SerializeField] private float _sprintForce = 10f;
-    [Range(30f, 100f), SerializeField] private float momentum = 60f;
+    [field: SerializeField, Range(30f, 100f)] public float BaseMomentum { get; private set; } = 60f;
+    [field: SerializeField, Range(30f, 100f)] public float Momentum { get; set; } = 60f;
+    [field: SerializeField, Range(30f, 100f)] public float NonSlideMomentum { get; set; } = 80f;
 
     [Header("Dash Settings")]
     public bool DashHasGravity = true;
@@ -108,7 +110,7 @@ public class PlayerMovement : MonoBehaviour {
 
     void StopMovement() {
         if (_moveDirection.magnitude > 0.01f) {
-            _moveDirection = Vector2.Lerp(_moveDirection, Vector2.zero, momentum * Time.fixedDeltaTime);
+            _moveDirection = Vector2.Lerp(_moveDirection, Vector2.zero, Momentum * Time.fixedDeltaTime);
         } else {
             _moveDirection = Vector2.zero;
             _cancelledMovement = false;

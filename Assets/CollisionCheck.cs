@@ -1,4 +1,5 @@
 using UnityEngine;
+using Unity.Mathematics;
 using Cysharp.Threading.Tasks;
 
 public class CollisionCheck : MonoBehaviour {
@@ -25,6 +26,7 @@ public class CollisionCheck : MonoBehaviour {
     [SerializeField] private float _checkAngle = 3.5f;
     [SerializeField] private float _maxStepHeight = 0.3f;
     [SerializeField] private float _stepGravTime = 0.1f;
+    [SerializeField] private float _sidesOffet = 0.01f;
 
     [Header("Misc Settings")]
     public bool DrawGizmo = true;
@@ -44,6 +46,7 @@ public class CollisionCheck : MonoBehaviour {
     private RaycastHit[] _rayHitsF2 = new RaycastHit[2];
     private RaycastHit[] _rayHitsR = new RaycastHit[2];
     private RaycastHit[] _rayHitsL = new RaycastHit[2];
+    private PhysicsMaterial _currentMaterial;
 
     #endregion
 
@@ -84,7 +87,7 @@ public class CollisionCheck : MonoBehaviour {
         );
 
         if (hits == 0) return false;
-        float minDot = Mathf.Cos(_maxSlopeAngle * Mathf.Deg2Rad);
+        float minDot = math.cos(math.radians(_maxSlopeAngle));
 
         float bestAlignment = -1f;
         RaycastHit bestHit = new();
@@ -155,19 +158,26 @@ public class CollisionCheck : MonoBehaviour {
     }
 
     void CheckSideForLowObjects(Vector3 feetPos, float rayDistance) {
-        Vector3 rightDir = _playerTransform.right;
-        Vector3 leftDir = -rightDir;
+        if (CheckSide(feetPos, _playerTransform.right, _rayHitsR, rayDistance) ||
+            CheckSide(feetPos, -_playerTransform.right, _rayHitsL, rayDistance)) {
+                SlideMaterialChange();
+        } else {
+            if (!HasCollided) DefaultMaterialChange();
+        }
+    }
 
-        int hitsCount1 = Physics.RaycastNonAlloc(feetPos, rightDir, _rayHitsR, rayDistance);
-        bool didHitRight = TryGetNonPlayerHit(_rayHitsR, hitsCount1, out RaycastHit _);
-        DrawRays(feetPos, rightDir, rayDistance, didHitRight);
+    bool CheckSide(Vector3 origin, Vector3 direction, RaycastHit[] hitsArray, float distance) {
+        float extendDistance = distance + _sidesOffet;
+        int hitCount = Physics.RaycastNonAlloc(origin, direction, hitsArray, extendDistance);
+        bool didHit = TryGetNonPlayerHit(hitsArray, hitCount, out RaycastHit hit);
+        DrawRays(origin, direction, extendDistance, didHit);
 
-        int hitsCount2 = Physics.RaycastNonAlloc(feetPos, leftDir, _rayHitsL, rayDistance);
-        bool didHitLeft = TryGetNonPlayerHit(_rayHitsL, hitsCount2, out RaycastHit _);
-        DrawRays(feetPos, leftDir, rayDistance, didHitLeft);
+        if (didHit) {
+            float angle = Vector3.Angle(hit.normal, Vector3.up);
+            return angle >= _wallAngleThreshold;
+        }
 
-        if (didHitRight || didHitLeft) _onWall = true;
-
+        return false;
     }
 
     void StepUp(Vector3 targetPoint) {
@@ -182,9 +192,8 @@ public class CollisionCheck : MonoBehaviour {
             _playerTransform.position.z
         );
 
-        _playerTransform.position = newPos;
-        Vector3 forwardOffset = _playerTransform.forward * 0.02f;
-        _playerTransform.position += forwardOffset;
+        _rb.MovePosition(newPos);
+        _rb.AddForce(_playerTransform.forward * 0.5f, ForceMode.VelocityChange);
     }
 
     void OnDrawGizmos() {
@@ -257,13 +266,19 @@ public class CollisionCheck : MonoBehaviour {
     }
 
     void SlideMaterialChange() {
+        if (_currentMaterial == _slideMaterial) return;
         _capsuleCollider.material = _slideMaterial;
+        _currentMaterial = _slideMaterial;
         _playerMovement.MaxSpeed = _playerMovement.DampenedSpeed;
+        _playerMovement.Momentum = _playerMovement.NonSlideMomentum;
     }
 
     void DefaultMaterialChange() {
+        if (_currentMaterial == _defaultMaterial) return;
         _capsuleCollider.material = _defaultMaterial;
+        _currentMaterial = _defaultMaterial;
         _playerMovement.MaxSpeed = _playerMovement.BaseSpeed;
+        _playerMovement.Momentum = _playerMovement.BaseMomentum;
     }
 
     async UniTaskVoid GravityChangeOnStepAsync(float time) {;
