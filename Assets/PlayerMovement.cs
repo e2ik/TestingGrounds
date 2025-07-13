@@ -4,72 +4,84 @@ using UnityEngine.InputSystem.Interactions;
 
 public class PlayerMovement : MonoBehaviour {
 
+    #region Fields
+
     [Header("Movement Forces")]
-    public float acceleration = 10f;
-    public float maxSpeed = 10f;
-    public float sprintMaxSpeed = 20f;
-    public float jumpForce = 10f;
-    public float sprintForce = 10f;
-    [Range(30f, 70f), SerializeField] private float momentum = 40f;
+    [SerializeField] private float _acceleration = 9f;
+    [field: SerializeField] public float BaseSpeed { get; private set; } = 7f;
+    [field: SerializeField] public float MaxSpeed { get; set; } = 7f;
+    [field: SerializeField] public float DampenedSpeed { get; set; } = 5f;
+    [field: SerializeField] public float SprintMaxSpeed { get; private set; } = 10f;
+    [SerializeField] private float _jumpForce = 8f;
+    [SerializeField] private float _sprintForce = 10f;
+    [Range(30f, 100f), SerializeField] private float momentum = 60f;
 
     [Header("Dash Settings")]
-    public bool dashHasGravity = true;
-    public float dashDistance = 5f;
-    public int dashAmount = 1;
+    public bool DashHasGravity = true;
+    [SerializeField] private float _dashDistance = 5f;
+    [field: SerializeField] public int DashAmount { get; private set; } = 1;
+    private int _dashCounter = 0;
 
     [Header("Double Jump Settings")]
-    public bool canDoubleJump = false;
-    private int jumpAmount = 1;
-    private int jumpCounter = 0; // can add more jumps in future if needed
-    public bool zeroVelocityOnDoubleJump = false;
+    public bool CanDoubleJump = false;
+    private int _jumpAmount = 1;
+    private int _jumpCounter = 0; // can add more jumps in future if needed
+    public bool ZeroVelocityOnDoubleJump = false;
 
     [Header("Misc Settings")]
-    public bool followCameraRotation = false;
-    public float coyoteTime = 0.15f;
-    public float jumpMultiplier = 0.5f;
+    public bool FollowCameraRotation = false;
+    [SerializeField] private float _coyoteTime = 0.15f;
+    [SerializeField] private float _jumpMultiplier = 0.5f;
 
-    private Rigidbody rb;
-    private PlayerInput playerInput;
-    private CollisionCheck collisionCheck;
-    private Vector3 dashStartPos;
-    private int dashCounter = 0;
+    private Rigidbody _rb;
+    private PlayerInput _playerInput;
+    private CollisionCheck _collisionCheck;
+    private Vector3 _dashStartPos;
     private Vector2 _moveDirection;
-    private bool cancelledMovement = false;
+    private bool _cancelledMovement = false;
     public bool IsMoving => _moveDirection != Vector2.zero;
-    private bool isSprinting = false;
-    private bool isDashing = false;
-    private float lastGroundedTime = 0f;
-    private bool inCoyote = false;
+    private bool _isSprinting = false;
+    private bool _isDashing = false;
+    private float _lastGroundedTime = 0f;
+    private bool _inCoyote = false;
+
+    // caches
+    private Transform _playerTransform;
+    private Transform _cameraTransform;
+
+    #endregion
 
     void Awake() {
-        playerInput = GetComponent<PlayerInput>();
+        _playerInput = GetComponent<PlayerInput>();
     }
 
     void OnEnable() {
-        playerInput.actions["Move"].performed += OnMove;
-        playerInput.actions["Move"].canceled += OnMove;
+        _playerInput.actions["Move"].performed += OnMove;
+        _playerInput.actions["Move"].canceled += OnMove;
 
-        playerInput.actions["Jump"].performed += OnJump;
+        _playerInput.actions["Jump"].performed += OnJump;
 
-        playerInput.actions["Sprint"].started += OnSprint;
-        playerInput.actions["Sprint"].performed += OnSprint;
-        playerInput.actions["Sprint"].canceled += OnSprint;
+        _playerInput.actions["Sprint"].started += OnSprint;
+        _playerInput.actions["Sprint"].performed += OnSprint;
+        _playerInput.actions["Sprint"].canceled += OnSprint;
     }
 
     void OnDisable() {
-        playerInput.actions["Move"].performed -= OnMove;
-        playerInput.actions["Move"].canceled -= OnMove;
+        _playerInput.actions["Move"].performed -= OnMove;
+        _playerInput.actions["Move"].canceled -= OnMove;
 
-        playerInput.actions["Jump"].performed -= OnJump;
+        _playerInput.actions["Jump"].performed -= OnJump;
         
-        playerInput.actions["Sprint"].started -= OnSprint;
-        playerInput.actions["Sprint"].performed -= OnSprint;
-        playerInput.actions["Sprint"].canceled -= OnSprint;
+        _playerInput.actions["Sprint"].started -= OnSprint;
+        _playerInput.actions["Sprint"].performed -= OnSprint;
+        _playerInput.actions["Sprint"].canceled -= OnSprint;
     }
 
     void Start() {
-        rb = GetComponent<Rigidbody>();
-        collisionCheck = GetComponent<CollisionCheck>();
+        _rb = GetComponent<Rigidbody>();
+        _collisionCheck = GetComponent<CollisionCheck>();
+        _playerTransform = transform;
+        _cameraTransform = Camera.main.transform;
     }
 
     void Update() {
@@ -79,14 +91,14 @@ public class PlayerMovement : MonoBehaviour {
 
     void FixedUpdate() {
         MovementLogic();
-        if (cancelledMovement) StopMovement();
+        if (_cancelledMovement) StopMovement();
     }
 
     void OnMove(InputAction.CallbackContext context) {
         if (context.canceled) {
-            cancelledMovement = true;
+            _cancelledMovement = true;
         } else {
-            cancelledMovement = false;
+            _cancelledMovement = false;
             _moveDirection = context.ReadValue<Vector2>();
         }
     }
@@ -96,16 +108,16 @@ public class PlayerMovement : MonoBehaviour {
             _moveDirection = Vector2.Lerp(_moveDirection, Vector2.zero, momentum * Time.fixedDeltaTime);
         } else {
             _moveDirection = Vector2.zero;
-            cancelledMovement = false;
+            _cancelledMovement = false;
         }
     }
 
     void OnJump(InputAction.CallbackContext context) {;
         if (context.performed) {
-            if (collisionCheck.IsGrounded) { ApplyJumpForce(jumpForce); return;}
+            if (_collisionCheck.IsGrounded) { ApplyJumpForce(_jumpForce); return;}
             else { HandleCoyote(); }
 
-            if (canDoubleJump) { HandleDoubleJump(); }
+            if (CanDoubleJump) { HandleDoubleJump(); }
         }
     }
 
@@ -115,115 +127,115 @@ public class PlayerMovement : MonoBehaviour {
         }
 
         if (context.performed && context.interaction is HoldInteraction) {
-            isSprinting = true;
+            _isSprinting = true;
         }
 
         if (context.canceled) {
-            isSprinting = false;
+            _isSprinting = false;
 
             if (_moveDirection == Vector2.zero) {
-                cancelledMovement = true;
+                _cancelledMovement = true;
             }
         }
     }
 
     void MovementLogic() {
         Vector3 inputDir = new Vector3(_moveDirection.x, 0, _moveDirection.y).normalized;
-        float horizontalSpeed = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z).magnitude;
+        float horizontalSpeed = new Vector3(_rb.linearVelocity.x, 0, _rb.linearVelocity.z).magnitude;
 
-        if (followCameraRotation) {
+        if (FollowCameraRotation) {
             inputDir = TranformToCameraRotation().normalized;
         }
 
-        float targetMaxSpeed = isSprinting ? sprintMaxSpeed : maxSpeed;
+        float targetMaxSpeed = _isSprinting ? SprintMaxSpeed : MaxSpeed;
         if (horizontalSpeed < targetMaxSpeed) {
-            if (collisionCheck.TryGetGroundNormal(out Vector3 normal)) {
+            if (_collisionCheck.TryGetGroundNormal(out Vector3 normal)) {
                 Vector3 slopeDir = Vector3.ProjectOnPlane(inputDir, normal).normalized;
-                float adjustForce = (targetMaxSpeed - horizontalSpeed) * acceleration;
-                rb.AddForce(slopeDir * adjustForce, ForceMode.Acceleration);
+                float adjustForce = (targetMaxSpeed - horizontalSpeed) * _acceleration;
+                _rb.AddForce(slopeDir * adjustForce, ForceMode.Acceleration);
             } else {
-                rb.AddForce(inputDir * acceleration, ForceMode.Acceleration);
+                _rb.AddForce(inputDir * _acceleration, ForceMode.Acceleration);
             }
         }
 
         if (inputDir != Vector3.zero) {
             Quaternion targetRotation = Quaternion.LookRotation(inputDir, Vector3.up);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.fixedDeltaTime);
+            _playerTransform.rotation = Quaternion.Slerp(_playerTransform.rotation, targetRotation, 10f * Time.fixedDeltaTime);
         }
     }
 
     void PerformDash() {
-        if (dashCounter >= dashAmount) return;
-        if (!collisionCheck.IsGrounded) dashCounter++;
+        if (_dashCounter >= DashAmount) return;
+        if (!_collisionCheck.IsGrounded) _dashCounter++;
 
         Vector3 inputDir;
 
         if (_moveDirection != Vector2.zero) {
             inputDir = new Vector3(_moveDirection.x, 0, _moveDirection.y).normalized;
 
-            if (followCameraRotation) {
+            if (FollowCameraRotation) {
                 inputDir = TranformToCameraRotation().normalized;
             }
         } else {
-            inputDir = transform.forward;
+            inputDir = _playerTransform.forward;
         }
 
-        float horizontalSpeed = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z).magnitude;
-        if (horizontalSpeed < sprintMaxSpeed) {
-            if (!dashHasGravity) {
-                rb.useGravity = false;
-                isDashing = true;
-                dashStartPos = transform.position;
-                Vector3 velocity = rb.linearVelocity;
+        float horizontalSpeed = new Vector3(_rb.linearVelocity.x, 0, _rb.linearVelocity.z).magnitude;
+        if (horizontalSpeed < SprintMaxSpeed) {
+            if (!DashHasGravity) {
+                _rb.useGravity = false;
+                _isDashing = true;
+                _dashStartPos = _playerTransform.position;
+                Vector3 velocity = _rb.linearVelocity;
                 velocity.y = 0;
-                rb.linearVelocity = velocity;
+                _rb.linearVelocity = velocity;
 
             }
-            rb.AddForce(inputDir * sprintForce, ForceMode.VelocityChange);
+            _rb.AddForce(inputDir * _sprintForce, ForceMode.VelocityChange);
         }
     }
 
     void HandleCoyote() {
-        if (Time.time - lastGroundedTime <= coyoteTime) {
-            Vector3 velocty = rb.linearVelocity;
+        if (Time.time - _lastGroundedTime <= _coyoteTime) {
+            Vector3 velocty = _rb.linearVelocity;
             if (velocty.y < 0) {
-                ApplyJumpForce(jumpForce);
-                inCoyote = true;
+                ApplyJumpForce(_jumpForce);
+                _inCoyote = true;
             }
         }
     }
 
     void HandleDoubleJump() {
-        if (jumpCounter >= jumpAmount) return;
-        if (zeroVelocityOnDoubleJump) {
-            Vector3 velocty = rb.linearVelocity;
+        if (_jumpCounter >= _jumpAmount) return;
+        if (ZeroVelocityOnDoubleJump) {
+            Vector3 velocty = _rb.linearVelocity;
             velocty.y = 0f;
-            rb.linearVelocity = velocty;
+            _rb.linearVelocity = velocty;
         }
-        ApplyJumpForce(jumpForce * jumpMultiplier);
-        if (!inCoyote) { jumpCounter++; }
-        else { inCoyote = false; }
+        ApplyJumpForce(_jumpForce * _jumpMultiplier);
+        if (!_inCoyote) { _jumpCounter++; }
+        else { _inCoyote = false; }
     }
 
     void UpdateJump() {
-        if (collisionCheck.IsGrounded) {
-            lastGroundedTime = Time.time;
-            jumpCounter = 0;
-            inCoyote = false;
+        if (_collisionCheck.IsGrounded) {
+            _lastGroundedTime = Time.time;
+            _jumpCounter = 0;
+            _inCoyote = false;
         }
     }
 
     void UpdateDash() {
-        if (dashCounter != 0 && collisionCheck.IsGrounded) dashCounter = 0;
-        if (isDashing && !dashHasGravity) {
-            float dashTravelled = Vector3.Distance(dashStartPos, transform.position);
-            if (dashTravelled > dashDistance) {
-                rb.useGravity = true;
-                isDashing = false;
+        if (_dashCounter != 0 && _collisionCheck.IsGrounded) _dashCounter = 0;
+        if (_isDashing && !DashHasGravity) {
+            float dashTravelled = Vector3.Distance(_dashStartPos, _playerTransform.position);
+            if (dashTravelled > _dashDistance) {
+                _rb.useGravity = true;
+                _isDashing = false;
             } else {
-                if (collisionCheck.IsGrounded || collisionCheck.hasCollided) {
-                    rb.useGravity = true;
-                    isDashing = false;
+                if (_collisionCheck.IsGrounded || _collisionCheck.HasCollided) {
+                    _rb.useGravity = true;
+                    _isDashing = false;
                 }
             }
         }
@@ -231,9 +243,8 @@ public class PlayerMovement : MonoBehaviour {
 
     // helpers
     Vector3 TranformToCameraRotation() {
-        Transform cam = Camera.main.transform;
-        Vector3 camForward = cam.forward;
-        Vector3 camRight = cam.right;
+        Vector3 camForward = _cameraTransform.forward;
+        Vector3 camRight = _cameraTransform.right;
         camForward.y = 0;
         camRight.y = 0;
         camForward.Normalize();
@@ -242,7 +253,7 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void ApplyJumpForce(float force) {
-        rb.linearVelocity = new Vector3(rb.linearVelocity.x, force, rb.linearVelocity.z);
+        _rb.linearVelocity = new Vector3(_rb.linearVelocity.x, force, _rb.linearVelocity.z);
     }
 
     public bool HasMoveInput() {
