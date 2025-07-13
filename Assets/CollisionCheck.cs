@@ -39,6 +39,11 @@ public class CollisionCheck : MonoBehaviour {
     // caches
     private Transform _playerTransform;
     private Rigidbody _rb;
+    private RaycastHit[] _boxHits = new RaycastHit[2];
+    private RaycastHit[] _rayHitsF1 = new RaycastHit[2];
+    private RaycastHit[] _rayHitsF2 = new RaycastHit[2];
+    private RaycastHit[] _rayHitsR = new RaycastHit[2];
+    private RaycastHit[] _rayHitsL = new RaycastHit[2];
 
     #endregion
 
@@ -69,22 +74,24 @@ public class CollisionCheck : MonoBehaviour {
             _capsuleCollider.radius * _colliderSize
         );
         
-        RaycastHit[] hits  = Physics.BoxCastAll(
+        int hits  = Physics.BoxCastNonAlloc(
             colliderBottom,
             boxHalfExtents,
             Vector3.down,
+            _boxHits,
             Quaternion.identity,
             _groundCheckDistance
         );
 
-        if (hits.Length == 0) return false;
+        if (hits == 0) return false;
         float minDot = Mathf.Cos(_maxSlopeAngle * Mathf.Deg2Rad);
 
         float bestAlignment = -1f;
         RaycastHit bestHit = new();
         bool foundValid = false;
 
-        foreach (var hit in hits) {
+        for (int i = 0; i < hits; i++) {
+            RaycastHit hit = _boxHits[i];
             if (hit.collider == _capsuleCollider) continue;
             float alignment = Vector3.Dot(hit.normal, Vector3.up);
             if (alignment >= minDot && alignment > bestAlignment) {
@@ -124,8 +131,8 @@ public class CollisionCheck : MonoBehaviour {
     }
 
     void CheckForStep(Vector3 feetPos, Vector3 rayDir, float rayDistance) {
-        RaycastHit[] hits1 = Physics.RaycastAll(feetPos, rayDir, rayDistance);
-        bool didHit1 = TryGetNonPlayerHit(hits1, out RaycastHit hit1);
+        int hitsCounts1 = Physics.RaycastNonAlloc(feetPos, rayDir, _rayHitsF1, rayDistance);
+        bool didHit1 = TryGetNonPlayerHit(_rayHitsF1, hitsCounts1, out RaycastHit hit1);
         DrawRays(feetPos, rayDir, rayDistance, didHit1);
         float hitAngle = Vector3.Angle(hit1.normal, Vector3.up);
 
@@ -134,8 +141,8 @@ public class CollisionCheck : MonoBehaviour {
             Vector3 diagonalDir = (Vector3.down * _checkAngle + rayDir).normalized;
             float diagonalDistance = _stepCheckDistance + _stepRayOffset;
 
-            RaycastHit[] hits2 = Physics.RaycastAll(diagonalOrigin, diagonalDir, diagonalDistance);
-            bool didHit2 = TryGetNonPlayerHit(hits2, out RaycastHit hit2);
+            int hitsCounts2 = Physics.RaycastNonAlloc(diagonalOrigin, diagonalDir, _rayHitsF2, diagonalDistance);
+            bool didHit2 = TryGetNonPlayerHit(_rayHitsF2, hitsCounts2, out RaycastHit hit2);
             DrawRays(diagonalOrigin, diagonalDir, diagonalDistance, didHit2);
 
             if (didHit2) {
@@ -151,16 +158,16 @@ public class CollisionCheck : MonoBehaviour {
         Vector3 rightDir = _playerTransform.right;
         Vector3 leftDir = -rightDir;
 
-        RaycastHit[] hits1 = Physics.RaycastAll(feetPos, rightDir, rayDistance);
-        bool didHitRight = TryGetNonPlayerHit(hits1, out RaycastHit hitR);
+        int hitsCount1 = Physics.RaycastNonAlloc(feetPos, rightDir, _rayHitsR, rayDistance);
+        bool didHitRight = TryGetNonPlayerHit(_rayHitsR, hitsCount1, out RaycastHit _);
         DrawRays(feetPos, rightDir, rayDistance, didHitRight);
 
-        RaycastHit[] hits2 = Physics.RaycastAll(feetPos, leftDir, rayDistance);
-        bool didHitLeft = TryGetNonPlayerHit(hits2, out RaycastHit hitL);
+        int hitsCount2 = Physics.RaycastNonAlloc(feetPos, leftDir, _rayHitsL, rayDistance);
+        bool didHitLeft = TryGetNonPlayerHit(_rayHitsL, hitsCount2, out RaycastHit _);
         DrawRays(feetPos, leftDir, rayDistance, didHitLeft);
 
         if (didHitRight || didHitLeft) _onWall = true;
-        else _onWall = false;
+
     }
 
     void StepUp(Vector3 targetPoint) {
@@ -238,10 +245,10 @@ public class CollisionCheck : MonoBehaviour {
         Debug.DrawRay(origin, direction * distance, rayColor);
     }
 
-    bool TryGetNonPlayerHit(RaycastHit[] hits, out RaycastHit validHit) {
-        foreach (var hit in hits) {
-            if (hit.collider != _capsuleCollider) {
-                validHit = hit;
+    bool TryGetNonPlayerHit(RaycastHit[] hits, int hitCount, out RaycastHit validHit) {
+        for (int i = 0; i < hitCount; i++) {
+            if (hits[i].collider != _capsuleCollider) {
+                validHit = hits[i];
                 return true;
             }
         }
