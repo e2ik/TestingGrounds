@@ -192,8 +192,9 @@ public class CollisionCheck : MonoBehaviour {
             _playerTransform.position.z
         );
 
-        _rb.MovePosition(newPos);
-        _rb.AddForce(_playerTransform.forward * 0.5f, ForceMode.VelocityChange);
+        _playerTransform.position = newPos;
+        Vector3 forwardOffset = _playerTransform.forward * 0.02f;
+        _playerTransform.position += forwardOffset;
     }
 
     void OnDrawGizmos() {
