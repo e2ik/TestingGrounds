@@ -1,5 +1,5 @@
-using System.Collections;
 using UnityEngine;
+using Cysharp.Threading.Tasks;
 
 public class CollisionCheck : MonoBehaviour {
 
@@ -133,7 +133,6 @@ public class CollisionCheck : MonoBehaviour {
 
             if (didHit2) {
                 float stepHeight = hit2.point.y - feetPos.y;
-                Debug.Log("has Movement input: " + playerMovement.HasMoveInput());
                 if (stepHeight > 0.01f && stepHeight <= maxStepHeight && playerMovement.HasMoveInput()) {
                     StepUp(hit2.point);
                 }
@@ -142,7 +141,7 @@ public class CollisionCheck : MonoBehaviour {
     }
 
     void StepUp(Vector3 targetPoint) {;
-        StartCoroutine(GravityChangeOnStep(stepGravTime));
+        GravityChangeOnStepAsync(stepGravTime).Forget();
 
         float heightOffset = capsuleCollider.height * 0.5f;
         float worldOffset = heightOffset * transform.lossyScale.y;
@@ -212,10 +211,10 @@ public class CollisionCheck : MonoBehaviour {
         return false;
     }
 
-    IEnumerator GravityChangeOnStep(float time) {
+    async UniTaskVoid GravityChangeOnStepAsync(float time) {
         Rigidbody rb = GetComponent<Rigidbody>();
         rb.useGravity = false;
-        yield return new WaitForSeconds(time);
+        await UniTask.Delay((int)(time * 1000));
         rb.useGravity = true;
     }
 }
