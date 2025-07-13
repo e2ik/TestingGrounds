@@ -422,7 +422,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.16183344, y: 0.1448926, z: -0.024029316, w: 0.9758272}
+  m_LocalRotation: {x: 0.16239282, y: 0.119994655, z: -0.01990018, w: 0.97920066}
   m_LocalPosition: {x: -1.77, y: 4.679, z: -7.556189}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -831,7 +831,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 454649705}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.16183338, y: 0.14489256, z: -0.024029307, w: 0.9758272}
+  m_LocalRotation: {x: 0.16239282, y: 0.11999464, z: -0.019900171, w: 0.97920066}
   m_LocalPosition: {x: -1.77, y: 4.679, z: -7.556189}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1247,7 +1247,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _acceleration: 9
+  <BaseSpeed>k__BackingField: 7
   <MaxSpeed>k__BackingField: 7
+  <DampenedSpeed>k__BackingField: 5
   <SprintMaxSpeed>k__BackingField: 10
   _jumpForce: 8
   _sprintForce: 10
@@ -1257,6 +1259,7 @@ MonoBehaviour:
   <DashAmount>k__BackingField: 1
   CanDoubleJump: 1
   ZeroVelocityOnDoubleJump: 1
+  _jumpBufferTime: 0.1
   FollowCameraRotation: 1
   _coyoteTime: 0.15
   _jumpMultiplier: 1.25
@@ -1272,23 +1275,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 57a7398ccd4af3840a7e912c4a0f503a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  groundCheckDistance: 0.2
-  maxSlopeAngle: 50
-  groundColliderOffset: 0.3
-  colliderSize: 0.8
-  hasCollided: 0
-  wallAngleThreshold: 60
-  firstStepOffset: 0.01
-  stepSmooth: 0.2
-  stepRayOffset: 0.05
-  stepHeightOffet: 2
-  stepCheckDistance: 2.1
-  checkAngle: 2.5
-  maxStepHeight: 0.3
-  stepGravTime: 0.1
+  _groundCheckDistance: 0.2
+  _maxSlopeAngle: 50
+  _groundColliderOffset: 0.3
+  _colliderSize: 0.8
+  <HasCollided>k__BackingField: 0
+  _wallAngleThreshold: 60
+  _firstStepOffset: 0.01
+  _stepRayOffset: 0.05
+  _stepLookHeight: 2
+  _stepCheckDistance: 2
+  _checkAngle: 3.5
+  _maxStepHeight: 0.3
+  _stepGravTime: 0.1
   DrawGizmo: 1
-  defaultMaterial: {fileID: 13400000, guid: 1b678f928ee09e0499c4c26d0f6e1bdb, type: 2}
-  slideMaterial: {fileID: 13400000, guid: 0a81cc2788afa4849bf761630d79c995, type: 2}
+  _defaultMaterial: {fileID: 13400000, guid: 1b678f928ee09e0499c4c26d0f6e1bdb, type: 2}
+  _slideMaterial: {fileID: 13400000, guid: 0a81cc2788afa4849bf761630d79c995, type: 2}
 --- !u!4 &855627878 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8550906120776788466, guid: 5b69e8b84b9915c4fb545ea66e0c82f8, type: 3}

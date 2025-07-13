@@ -22,11 +22,13 @@ public class PlayerMovement : MonoBehaviour {
     [field: SerializeField] public int DashAmount { get; private set; } = 1;
     private int _dashCounter = 0;
 
-    [Header("Double Jump Settings")]
+    [Header("Jump Settings")]
     public bool CanDoubleJump = false;
     private int _jumpAmount = 1;
     private int _jumpCounter = 0; // can add more jumps in future if needed
     public bool ZeroVelocityOnDoubleJump = false;
+    [SerializeField] private float _jumpBufferTime = 0.15f;
+    private float _jumpBufferCounter = 0f;
 
     [Header("Misc Settings")]
     public bool FollowCameraRotation = false;
@@ -59,6 +61,7 @@ public class PlayerMovement : MonoBehaviour {
         _playerInput.actions["Move"].performed += OnMove;
         _playerInput.actions["Move"].canceled += OnMove;
 
+        _playerInput.actions["Jump"].started += OnJump;
         _playerInput.actions["Jump"].performed += OnJump;
 
         _playerInput.actions["Sprint"].started += OnSprint;
@@ -70,6 +73,7 @@ public class PlayerMovement : MonoBehaviour {
         _playerInput.actions["Move"].performed -= OnMove;
         _playerInput.actions["Move"].canceled -= OnMove;
 
+        _playerInput.actions["Jump"].started -= OnJump;
         _playerInput.actions["Jump"].performed -= OnJump;
         
         _playerInput.actions["Sprint"].started -= OnSprint;
@@ -95,9 +99,8 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void OnMove(InputAction.CallbackContext context) {
-        if (context.canceled) {
-            _cancelledMovement = true;
-        } else {
+        if (context.canceled) _cancelledMovement = true;
+        else {
             _cancelledMovement = false;
             _moveDirection = context.ReadValue<Vector2>();
         }
@@ -112,19 +115,18 @@ public class PlayerMovement : MonoBehaviour {
         }
     }
 
-    void OnJump(InputAction.CallbackContext context) {;
+    void OnJump(InputAction.CallbackContext context) {
+        if (context.started) _jumpBufferCounter = _jumpBufferTime;
         if (context.performed) {
-            if (_collisionCheck.IsGrounded) { ApplyJumpForce(_jumpForce); return;}
-            else { HandleCoyote(); }
+            if (_collisionCheck.IsGrounded) { ApplyJumpForce(_jumpForce); return; }
+            else HandleCoyote();
 
-            if (CanDoubleJump) { HandleDoubleJump(); }
+            if (CanDoubleJump) HandleDoubleJump();
         }
     }
 
     void OnSprint(InputAction.CallbackContext context) {
-        if (context.started) {
-            PerformDash();
-        }
+        if (context.started) PerformDash();
 
         if (context.performed && context.interaction is HoldInteraction) {
             _isSprinting = true;
@@ -218,10 +220,19 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void UpdateJump() {
+        if (_jumpBufferCounter > 0) {
+            _jumpBufferCounter -= Time.fixedDeltaTime;
+        }
+        
         if (_collisionCheck.IsGrounded) {
             _lastGroundedTime = Time.time;
             _jumpCounter = 0;
             _inCoyote = false;
+
+            if (_jumpBufferCounter > 0) {
+                ApplyJumpForce(_jumpForce);
+                _jumpBufferCounter = 0f;
+            }
         }
     }
 

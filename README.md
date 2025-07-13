@@ -1,8 +1,6 @@
-July 13:
+July 14:
 
 - Get some simple Assets start working on animations
-- Might want to tighten up the angle so it can detect narrower objects to step over.
-- add 2 side raycasts to change material (player gets caught) when there's a step due to collider
 
 
 

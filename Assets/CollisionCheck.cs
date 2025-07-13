@@ -52,7 +52,7 @@ public class CollisionCheck : MonoBehaviour {
 
     void Update() {
         MaterialChange();
-        CheckForStep();
+        CheckRayCasts();
     }
 
     public bool CheckIsGrounded() {
@@ -109,16 +109,21 @@ public class CollisionCheck : MonoBehaviour {
         return false;        
     }
 
-    void CheckForStep() {
+    void CheckRayCasts() {
         if (!IsGrounded) return;
         if (_capsuleCollider == null) return;
 
         Vector3 feetPos = _capsuleCollider.bounds.center;
         feetPos.y = _capsuleCollider.bounds.min.y + _firstStepOffset;
-
         Vector3 rayDir = _playerTransform.forward;
         float rayDistance = _capsuleCollider.radius + _stepRayOffset;
 
+        CheckForStep(feetPos, rayDir, rayDistance);
+        CheckSideForLowObjects(feetPos, rayDistance);
+        CheckSideForLowObjects(feetPos, rayDistance);
+    }
+
+    void CheckForStep(Vector3 feetPos, Vector3 rayDir, float rayDistance) {
         RaycastHit[] hits1 = Physics.RaycastAll(feetPos, rayDir, rayDistance);
         bool didHit1 = TryGetNonPlayerHit(hits1, out RaycastHit hit1);
         DrawRays(feetPos, rayDir, rayDistance, didHit1);
@@ -140,6 +145,22 @@ public class CollisionCheck : MonoBehaviour {
                 }
             }
         }
+    }
+
+    void CheckSideForLowObjects(Vector3 feetPos, float rayDistance) {
+        Vector3 rightDir = _playerTransform.right;
+        Vector3 leftDir = -rightDir;
+
+        RaycastHit[] hits1 = Physics.RaycastAll(feetPos, rightDir, rayDistance);
+        bool didHitRight = TryGetNonPlayerHit(hits1, out RaycastHit hitR);
+        DrawRays(feetPos, rightDir, rayDistance, didHitRight);
+
+        RaycastHit[] hits2 = Physics.RaycastAll(feetPos, leftDir, rayDistance);
+        bool didHitLeft = TryGetNonPlayerHit(hits2, out RaycastHit hitL);
+        DrawRays(feetPos, leftDir, rayDistance, didHitLeft);
+
+        if (didHitRight || didHitLeft) _onWall = true;
+        else _onWall = false;
     }
 
     void StepUp(Vector3 targetPoint) {
