@@ -59,7 +59,6 @@ public class CollisionCheck : MonoBehaviour {
 
     void Update() {
         CheckPlayerInput();
-        Debug.Log(IsGrounded);
     }
 
     void FixedUpdate() {
@@ -110,7 +109,7 @@ public class CollisionCheck : MonoBehaviour {
                     bestAlignment = alignment;
                 }
             } else {
-                if (alignment <= minDot && alignment > bestAlignment || alignment >= 0.99f) {
+                if (alignment >= minDot && alignment > bestAlignment) {
                     bestHit = hit;
                     bestAlignment = alignment;
                 }
