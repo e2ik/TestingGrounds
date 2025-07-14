@@ -47,6 +47,7 @@ public class CollisionCheck : MonoBehaviour {
     private RaycastHit[] _rayHitsR = new RaycastHit[2];
     private RaycastHit[] _rayHitsL = new RaycastHit[2];
     private PhysicsMaterial _currentMaterial;
+    private bool _playerHasInput = false;
 
     #endregion
 
@@ -59,8 +60,12 @@ public class CollisionCheck : MonoBehaviour {
     }
 
     void Update() {
-        MaterialChange();
+        CheckPlayerInput();
+    }
+
+    void FixedUpdate() {
         CheckRayCasts();
+        MaterialChange();
     }
 
     public bool CheckIsGrounded() {
@@ -150,7 +155,7 @@ public class CollisionCheck : MonoBehaviour {
 
             if (didHit2) {
                 float stepHeight = hit2.point.y - feetPos.y;
-                if (stepHeight > 0.01f && stepHeight <= _maxStepHeight && _playerMovement.HasMoveInput()) {
+                if (stepHeight > 0.01f && stepHeight <= _maxStepHeight && _playerHasInput) {
                     StepUp(hit2.point);
                 }
             }
@@ -160,7 +165,7 @@ public class CollisionCheck : MonoBehaviour {
     void CheckSideForLowObjects(Vector3 feetPos, float rayDistance) {
         if (CheckSide(feetPos, _playerTransform.right, _rayHitsR, rayDistance) ||
             CheckSide(feetPos, -_playerTransform.right, _rayHitsL, rayDistance)) {
-                SlideMaterialChange();
+                if (_playerHasInput) SlideMaterialChange();
         } else {
             if (!HasCollided) DefaultMaterialChange();
         }
@@ -192,9 +197,12 @@ public class CollisionCheck : MonoBehaviour {
             _playerTransform.position.z
         );
 
-        _playerTransform.position = newPos;
-        Vector3 forwardOffset = _playerTransform.forward * 0.02f;
-        _playerTransform.position += forwardOffset;
+        Vector3 forwardOffset = _playerTransform.forward * 0.03f;
+        Vector3 upwardOffset = Vector3.up * 0.015f;
+        newPos += forwardOffset;
+        newPos += upwardOffset;
+
+        _rb.MovePosition(newPos);
     }
 
     void OnDrawGizmos() {
@@ -280,6 +288,10 @@ public class CollisionCheck : MonoBehaviour {
         _currentMaterial = _defaultMaterial;
         _playerMovement.MaxSpeed = _playerMovement.BaseSpeed;
         _playerMovement.Momentum = _playerMovement.BaseMomentum;
+    }
+
+    bool CheckPlayerInput() {
+        return _playerHasInput = _playerMovement.HasMoveInput();
     }
 
     async UniTaskVoid GravityChangeOnStepAsync(float time) {;

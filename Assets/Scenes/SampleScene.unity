@@ -508,7 +508,7 @@ Camera:
   m_GameObject: {fileID: 330585543}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
+  m_ClearFlags: 2
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -517,12 +517,12 @@ Camera:
   m_ShutterSpeed: 0.005
   m_Aperture: 16
   m_FocusDistance: 10
-  m_FocalLength: 50
+  m_FocalLength: 13.858139
   m_BladeCount: 5
   m_Curvature: {x: 2, y: 11}
   m_BarrelClipping: 0.25
   m_Anamorphism: 0
-  m_SensorSize: {x: 36, y: 24}
+  m_SensorSize: {x: 21.946, y: 16.002}
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
@@ -558,7 +558,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.16190176, y: 0.1420883, z: -0.023564244, w: 0.97623944}
+  m_LocalRotation: {x: 0.16173387, y: 0.14887826, z: -0.024690308, w: 0.97522706}
   m_LocalPosition: {x: -1.77, y: 4.679, z: -7.556189}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -774,9 +774,8 @@ GameObject:
   - component: {fileID: 454649710}
   - component: {fileID: 454649709}
   - component: {fileID: 454649713}
-  - component: {fileID: 454649707}
-  - component: {fileID: 454649706}
   - component: {fileID: 454649712}
+  - component: {fileID: 454649706}
   m_Layer: 0
   m_Name: FreeLook Camera
   m_TagString: Untagged
@@ -836,23 +835,6 @@ MonoBehaviour:
         DecelTime: 0
   PlayerIndex: -1
   AutoEnableInputs: 1
---- !u!114 &454649707
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 454649705}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a076c17fe76165e4f8ed21498b877bf9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Easing: 0
-  Modifiers: []
-  references:
-    version: 2
-    RefIds: []
 --- !u!114 &454649709
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -883,7 +865,7 @@ MonoBehaviour:
       Height: 2.25
     Bottom:
       Radius: 2.5
-      Height: 0.1
+      Height: -1
     SplineCurvature: 1
   RecenteringTarget: 2
   HorizontalAxis:
@@ -967,7 +949,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 454649705}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.16190176, y: 0.1420883, z: -0.023564247, w: 0.97623944}
+  m_LocalRotation: {x: 0.16173387, y: 0.14887828, z: -0.02469031, w: 0.97522706}
   m_LocalPosition: {x: -1.77, y: 4.679, z: -7.556189}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1534,7 +1516,7 @@ MonoBehaviour:
   _checkAngle: 3.5
   _maxStepHeight: 0.3
   _stepGravTime: 0.1
-  _sidesOffet: 0.01
+  _sidesOffet: 0
   DrawGizmo: 1
   _defaultMaterial: {fileID: 13400000, guid: 1b678f928ee09e0499c4c26d0f6e1bdb, type: 2}
   _slideMaterial: {fileID: 13400000, guid: 0a81cc2788afa4849bf761630d79c995, type: 2}
