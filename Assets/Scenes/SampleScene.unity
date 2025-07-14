@@ -1487,7 +1487,7 @@ MonoBehaviour:
   <DashAmount>k__BackingField: 1
   CanDoubleJump: 1
   ZeroVelocityOnDoubleJump: 1
-  _jumpBufferTime: 0.1
+  _jumpBufferTime: 0.5
   FollowCameraRotation: 1
   _coyoteTime: 0.15
   _jumpMultiplier: 1.25
@@ -1515,7 +1515,7 @@ MonoBehaviour:
   _checkAngle: 3.5
   _maxStepHeight: 0.3
   _stepGravTime: 0.1
-  _sidesOffet: 0
+  _sidesOffet: 0.15
   DrawGizmo: 1
   _defaultMaterial: {fileID: 13400000, guid: 1b678f928ee09e0499c4c26d0f6e1bdb, type: 2}
   _slideMaterial: {fileID: 13400000, guid: 0a81cc2788afa4849bf761630d79c995, type: 2}
