@@ -8,8 +8,7 @@ public class CollisionCheck : MonoBehaviour {
 
     [Header("Ground Check")]
     [SerializeField] private float _groundCheckDistance = 0.2f;
-    [Range(0f, 89f), SerializeField] private float _maxSlopeAngle = 50f;
-    [SerializeField] private float _groundColliderOffset = 0.3f;
+    [field: SerializeField, Range(0f, 89f)] public float MaxSlopeAngle { get; private set; } = 50f;
     [SerializeField] private float _colliderSize = 0.8f;
     
     [Header("Wall Check")]
@@ -36,12 +35,11 @@ public class CollisionCheck : MonoBehaviour {
     public bool IsGrounded => CheckIsGrounded();
     private PlayerMovement _playerMovement;
     private CapsuleCollider _capsuleCollider;
-    private float _halfExtentsOffect = 0.1f;
 
     // caches
     private Transform _playerTransform;
     private Rigidbody _rb;
-    private RaycastHit[] _boxHits = new RaycastHit[2];
+    private RaycastHit[] _sphereHits = new RaycastHit[2];
     private RaycastHit[] _rayHitsF1 = new RaycastHit[2];
     private RaycastHit[] _rayHitsF2 = new RaycastHit[2];
     private RaycastHit[] _rayHitsR = new RaycastHit[2];
@@ -61,58 +59,72 @@ public class CollisionCheck : MonoBehaviour {
 
     void Update() {
         CheckPlayerInput();
+        Debug.Log(IsGrounded);
     }
 
     void FixedUpdate() {
-        CheckRayCasts();
         MaterialChange();
+        CheckRayCasts();
     }
 
     public bool CheckIsGrounded() {
         if (_capsuleCollider == null) return false;
 
-        Vector3 colliderBottom = new(
-            _capsuleCollider.bounds.center.x,
-            _capsuleCollider.bounds.min.y + _groundColliderOffset,
-            _capsuleCollider.bounds.center.z
-        );
-        Vector3 boxHalfExtents = new(
-            _capsuleCollider.radius * _colliderSize,
-            _halfExtentsOffect,
-            _capsuleCollider.radius * _colliderSize
-        );
-        
-        int hits  = Physics.BoxCastNonAlloc(
-            colliderBottom,
-            boxHalfExtents,
+        Vector3 feetPos = _capsuleCollider.bounds.center;
+        feetPos.y = _capsuleCollider.bounds.min.y + _firstStepOffset;
+        Vector3 forwardDir = _playerTransform.forward;
+        float forwardDistance = _capsuleCollider.radius + 0.1f;
+        bool goingUphill = Physics.Raycast(feetPos, forwardDir, forwardDistance);
+
+        return GroundCastSmart(goingUphill);
+    }
+
+    public bool GroundCastSmart(bool goingUphill) {
+        Vector3 origin = _capsuleCollider.bounds.center;
+        float radius = _capsuleCollider.radius * _colliderSize;
+        origin.y = _capsuleCollider.bounds.min.y + radius;
+
+        int hits = Physics.SphereCastNonAlloc(
+            origin,
+            radius,
             Vector3.down,
-            _boxHits,
-            Quaternion.identity,
+            _sphereHits,
             _groundCheckDistance
         );
 
         if (hits == 0) return false;
-        float minDot = math.cos(math.radians(_maxSlopeAngle));
 
+        float minDot = math.cos(math.radians(MaxSlopeAngle));
+        RaycastHit bestHit = default;
         float bestAlignment = -1f;
-        RaycastHit bestHit = new();
-        bool foundValid = false;
 
         for (int i = 0; i < hits; i++) {
-            RaycastHit hit = _boxHits[i];
+            RaycastHit hit = _sphereHits[i];
             if (hit.collider == _capsuleCollider) continue;
+
             float alignment = Vector3.Dot(hit.normal, Vector3.up);
-            if (alignment >= minDot && alignment > bestAlignment) {
-                bestAlignment = alignment;
-                bestHit = hit;
-                foundValid = true;
+
+            if (goingUphill) {
+                if (alignment >= minDot) {
+                    bestHit = hit;
+                    bestAlignment = alignment;
+                }
+            } else {
+                if (alignment <= minDot && alignment > bestAlignment || alignment >= 0.99f) {
+                    bestHit = hit;
+                    bestAlignment = alignment;
+                }
             }
         }
 
-        if (foundValid) _lastGroundHit = bestHit;
+        if (bestHit.collider != null) {
+            _lastGroundHit = bestHit;
+            return true;
+        }
 
-        return foundValid;
+        return false;
     }
+
 
     public bool TryGetGroundNormal(out Vector3 normal) {
         if (IsGrounded) {
@@ -208,21 +220,20 @@ public class CollisionCheck : MonoBehaviour {
     void OnDrawGizmos() {
         if (!DrawGizmo || _capsuleCollider == null) return;
 
-        Vector3 bottom = new(
-            _capsuleCollider.bounds.center.x,
-            _capsuleCollider.bounds.min.y + _groundColliderOffset,
-            _capsuleCollider.bounds.center.z
-        );
+        float radius = _capsuleCollider.radius * _colliderSize;
+        Vector3 origin = _capsuleCollider.bounds.center;
+        origin.y = _capsuleCollider.bounds.min.y + radius;
 
-        Vector3 boxSize = new(
-            _capsuleCollider.radius * 2f * _colliderSize,
-            0.1f,
-            _capsuleCollider.radius * 2f * _colliderSize
-        );
-
-        Vector3 boxCenter = bottom + Vector3.down * _groundCheckDistance;
         Gizmos.color = CheckIsGrounded() ? Color.green : Color.red;
-        Gizmos.DrawWireCube(boxCenter, boxSize);
+        Gizmos.DrawWireSphere(origin, radius);
+
+        Vector3 endPoint = origin + Vector3.down * _groundCheckDistance;
+        Gizmos.DrawWireSphere(endPoint, radius);
+
+        Gizmos.DrawLine(origin + Vector3.forward * radius, endPoint + Vector3.forward * radius);
+        Gizmos.DrawLine(origin - Vector3.forward * radius, endPoint - Vector3.forward * radius);
+        Gizmos.DrawLine(origin + Vector3.right * radius, endPoint + Vector3.right * radius);
+        Gizmos.DrawLine(origin - Vector3.right * radius, endPoint - Vector3.right * radius);
     }
 
     void MaterialChange() {

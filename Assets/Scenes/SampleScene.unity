@@ -558,7 +558,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.16173387, y: 0.14887826, z: -0.024690308, w: 0.97522706}
+  m_LocalRotation: {x: 0.16107138, y: 0.17303205, z: -0.028696025, w: 0.9712325}
   m_LocalPosition: {x: -1.77, y: 4.679, z: -7.556189}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -949,7 +949,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 454649705}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.16173387, y: 0.14887828, z: -0.02469031, w: 0.97522706}
+  m_LocalRotation: {x: 0.16107138, y: 0.17303205, z: -0.028696023, w: 0.9712325}
   m_LocalPosition: {x: -1.77, y: 4.679, z: -7.556189}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1475,13 +1475,13 @@ MonoBehaviour:
   _acceleration: 9
   <BaseSpeed>k__BackingField: 7
   <MaxSpeed>k__BackingField: 7
-  <DampenedSpeed>k__BackingField: 5
+  <DampenedSpeed>k__BackingField: 4
   <SprintMaxSpeed>k__BackingField: 10
   _jumpForce: 8
   _sprintForce: 10
   <BaseMomentum>k__BackingField: 60
   <Momentum>k__BackingField: 60
-  <NonSlideMomentum>k__BackingField: 80
+  <NonSlideMomentum>k__BackingField: 100
   DashHasGravity: 0
   _dashDistance: 2
   <DashAmount>k__BackingField: 1
@@ -1503,10 +1503,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 57a7398ccd4af3840a7e912c4a0f503a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _groundCheckDistance: 0.2
-  _maxSlopeAngle: 50
-  _groundColliderOffset: 0.3
-  _colliderSize: 0.8
+  _groundCheckDistance: 0.1
+  <MaxSlopeAngle>k__BackingField: 50
+  _colliderSize: 0.7
   <HasCollided>k__BackingField: 0
   _wallAngleThreshold: 60
   _firstStepOffset: 0.01
@@ -1762,13 +1761,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1230101580}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.22089812, y: 0.18910863, z: -0.62222743, w: 0.7268253}
+  m_LocalRotation: {x: -0.19906834, y: 0.21196659, z: -0.53966594, w: 0.79006493}
   m_LocalPosition: {x: -5.74, y: 1.31, z: 0.94}
   m_LocalScale: {x: 5, y: 0.5, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: -4.92, y: 33.493, z: -82.614}
+  m_LocalEulerAnglesHint: {x: -4.92, y: 33.493, z: -70.153}
 --- !u!1 &1243862046
 GameObject:
   m_ObjectHideFlags: 0

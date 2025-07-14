@@ -1,6 +1,7 @@
 July 14:
 
 - Get some simple Assets start working on animations
+- Might have to create own asset
 
 
 
