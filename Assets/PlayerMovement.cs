@@ -1,3 +1,4 @@
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
@@ -13,7 +14,6 @@ public class PlayerMovement : MonoBehaviour {
     [field: SerializeField] public float MaxSpeed { get; set; } = 7f;
     [field: SerializeField] public float DampenedSpeed { get; set; } = 5f;
     [field: SerializeField] public float SprintMaxSpeed { get; private set; } = 10f;
-    [SerializeField] private float _jumpForce = 8f;
     [SerializeField] private float _sprintForce = 10f;
     [field: SerializeField, Range(30f, 100f)] public float BaseMomentum { get; private set; } = 60f;
     [field: SerializeField, Range(30f, 100f)] public float Momentum { get; set; } = 60f;
@@ -26,9 +26,18 @@ public class PlayerMovement : MonoBehaviour {
     private int _dashCounter = 0;
 
     [Header("Jump Settings")]
+    [SerializeField] private float _jumpForce = 8f;
+    [SerializeField] private float _jumpHoldForce = 3f;
+    [SerializeField] private float _jumpHoldDuration = 0.25f;
+    public bool CanHoldJump = false;
     public bool CanDoubleJump = false;
     private int _jumpAmount = 1;
     private int _jumpCounter = 0; // can add more jumps in future if needed
+    private bool _isJumping;
+    private float _jumpHoldTimer;
+    private bool _isJumpHeld;
+    private float _decayJumpForce;
+
     public bool ZeroVelocityOnDoubleJump = false;
     [SerializeField] private float _jumpBufferTime = 0.15f;
     private float _jumpBufferCounter = 0f;
@@ -66,6 +75,7 @@ public class PlayerMovement : MonoBehaviour {
 
         _playerInput.actions["Jump"].started += OnJump;
         _playerInput.actions["Jump"].performed += OnJump;
+        _playerInput.actions["Jump"].canceled += OnJump;
 
         _playerInput.actions["Sprint"].started += OnSprint;
         _playerInput.actions["Sprint"].performed += OnSprint;
@@ -78,6 +88,7 @@ public class PlayerMovement : MonoBehaviour {
 
         _playerInput.actions["Jump"].started -= OnJump;
         _playerInput.actions["Jump"].performed -= OnJump;
+        _playerInput.actions["Jump"].canceled -= OnJump;
         
         _playerInput.actions["Sprint"].started -= OnSprint;
         _playerInput.actions["Sprint"].performed -= OnSprint;
@@ -91,14 +102,12 @@ public class PlayerMovement : MonoBehaviour {
         _cameraTransform = Camera.main.transform;
     }
 
-    void Update() {
+    void FixedUpdate() {
         UpdateJump();
         UpdateDash();
-    }
-
-    void FixedUpdate() {
         MovementLogic();
         if (_cancelledMovement) StopMovement();
+        HandleJumpHoldForce();
     }
 
     void OnMove(InputAction.CallbackContext context) {
@@ -121,10 +130,37 @@ public class PlayerMovement : MonoBehaviour {
     void OnJump(InputAction.CallbackContext context) {
         if (context.started) _jumpBufferCounter = _jumpBufferTime;
         if (context.performed) {
-            if (_collisionCheck.IsGrounded) { ApplyJumpForce(_jumpForce); return; }
-            else HandleCoyote();
+            _isJumpHeld = true;
+            if (_collisionCheck.IsGrounded) {
+                ApplyJumpForce(_jumpForce);
+                StartJumpHold();
+            } else {
+                HandleCoyote();
+                if (CanDoubleJump) HandleDoubleJump();
+            }
+        }
+        if (context.canceled) {
+            _isJumpHeld = false;
+        }
+    }
 
-            if (CanDoubleJump) HandleDoubleJump();
+    void StartJumpHold() {
+        _isJumping = true;
+        _jumpHoldTimer = 0f;
+        _decayJumpForce = _jumpHoldForce;
+    }
+
+    void HandleJumpHoldForce() {
+        if (!CanHoldJump || !_isJumping || !_isJumpHeld) return;
+
+        if (_jumpHoldTimer < _jumpHoldDuration) {
+            _jumpHoldTimer += Time.fixedDeltaTime;
+            float t = _jumpHoldTimer / _jumpHoldDuration;
+            float curvedT = math.sin(t * math.PI);
+            float currentForce = _jumpHoldForce * curvedT;
+            _rb.AddForce(Vector3.up * currentForce, ForceMode.VelocityChange);
+        } else {
+            _isJumping = false;
         }
     }
 
