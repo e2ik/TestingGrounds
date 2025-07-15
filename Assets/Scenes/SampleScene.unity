@@ -850,7 +850,7 @@ MonoBehaviour:
   TargetOffset: {x: 0, y: 0, z: 0}
   TrackerSettings:
     BindingMode: 4
-    PositionDamping: {x: 0.2, y: 0.2, z: 0.2}
+    PositionDamping: {x: 0, y: 0, z: 0}
     AngularDampingMode: 0
     RotationDamping: {x: 0, y: 0, z: 0}
     QuaternionDamping: 20
@@ -1480,7 +1480,7 @@ MonoBehaviour:
   _sprintForce: 12
   _brakingForce: 30
   _turnSharpness: 5
-  _airTurnSharpness: 3
+  _airTurnSharpness: 2
   DashHasGravity: 0
   _dashDistance: 2
   <DashAmount>k__BackingField: 1
@@ -1507,7 +1507,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 57a7398ccd4af3840a7e912c4a0f503a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _groundCheckDistance: 0.1
+  _groundCheckDistance: 0.15
   <MaxSlopeAngle>k__BackingField: 50
   _colliderSize: 0.7
   _hasCollided: 0
@@ -1518,7 +1518,6 @@ MonoBehaviour:
   _stepCheckDistance: 2
   _checkAngle: 3.5
   _maxStepHeight: 0.3
-  _sidesOffet: 0.15
   DrawGizmo: 1
 --- !u!4 &855627878 stripped
 Transform:
