@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
 
+[RequireComponent(typeof(CollisionCheck))]
 public class PlayerMovement : MonoBehaviour {
 
     #region Fields
