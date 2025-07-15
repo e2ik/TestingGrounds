@@ -12,9 +12,9 @@ public class CollisionCheck : MonoBehaviour {
     [SerializeField] private float _colliderSize = 0.8f;
     
     [Header("Wall Check")]
-    [field: SerializeField] public bool HasCollided { get; private set; } = false;  
     private RaycastHit _lastGroundHit;
-    private bool _onWall = false;
+    [SerializeField] private bool _hasCollided = false;
+    public bool HasCollided => _hasCollided;
     [SerializeField] private float _wallAngleThreshold = 60f;
 
     [Header("Step Check")]
@@ -24,15 +24,13 @@ public class CollisionCheck : MonoBehaviour {
     [SerializeField] private float _stepCheckDistance = 2.0f;
     [SerializeField] private float _checkAngle = 3.5f;
     [SerializeField] private float _maxStepHeight = 0.3f;
-    [SerializeField] private float _stepGravTime = 0.1f;
-    [SerializeField] private float _sidesOffet = 0.01f;
 
     [Header("Misc Settings")]
     public bool DrawGizmo = true;
-    [SerializeField] private PhysicsMaterial _defaultMaterial;
-    [SerializeField] private PhysicsMaterial _slideMaterial;
 
     public bool IsGrounded => CheckIsGrounded();
+    public Vector3 GroundNormal => _lastGroundHit.normal;
+    public Vector3 LastGroundPoint => _lastGroundHit.point;
     private PlayerMovement _playerMovement;
     private CapsuleCollider _capsuleCollider;
 
@@ -42,16 +40,12 @@ public class CollisionCheck : MonoBehaviour {
     private RaycastHit[] _sphereHits = new RaycastHit[2];
     private RaycastHit[] _rayHitsF1 = new RaycastHit[2];
     private RaycastHit[] _rayHitsF2 = new RaycastHit[2];
-    private RaycastHit[] _rayHitsR = new RaycastHit[2];
-    private RaycastHit[] _rayHitsL = new RaycastHit[2];
-    private PhysicsMaterial _currentMaterial;
     private bool _playerHasInput = false;
 
     #endregion
 
     void Start() {
         _capsuleCollider = GetComponent<CapsuleCollider>();
-        _capsuleCollider.material = _defaultMaterial;
         _playerMovement = GetComponent<PlayerMovement>();
         _playerTransform = transform;
         _rb = GetComponent<Rigidbody>();
@@ -62,7 +56,6 @@ public class CollisionCheck : MonoBehaviour {
     }
 
     void FixedUpdate() {
-        MaterialChange();
         CheckRayCasts();
     }
 
@@ -94,7 +87,10 @@ public class CollisionCheck : MonoBehaviour {
         if (hits == 0) return false;
 
         float minDot = math.cos(math.radians(MaxSlopeAngle));
-        RaycastHit bestHit = default;
+
+        Vector3 normalSum = Vector3.zero;
+        int validHitCount = 0;
+        RaycastHit fallbackHit = default;
         float bestAlignment = -1f;
 
         for (int i = 0; i < hits; i++) {
@@ -103,27 +99,32 @@ public class CollisionCheck : MonoBehaviour {
 
             float alignment = Vector3.Dot(hit.normal, Vector3.up);
 
-            if (goingUphill) {
-                if (alignment >= minDot) {
-                    bestHit = hit;
-                    bestAlignment = alignment;
-                }
-            } else {
-                if (alignment >= minDot && alignment > bestAlignment) {
-                    bestHit = hit;
-                    bestAlignment = alignment;
+            Debug.Log("Alignment: " + alignment);
+
+            if (alignment >= minDot) {
+                if (goingUphill) {
+                    _lastGroundHit = hit;
+                    return true;
+                } else {
+                    normalSum += hit.normal;
+                    validHitCount++;
+
+                    if (alignment > bestAlignment) {
+                        fallbackHit = hit;
+                        bestAlignment = alignment;
+                    }
                 }
             }
         }
 
-        if (bestHit.collider != null) {
-            _lastGroundHit = bestHit;
+        if (validHitCount > 0) {
+            _lastGroundHit = fallbackHit;
+            _lastGroundHit.normal = normalSum.normalized;
             return true;
         }
 
         return false;
     }
-
 
     public bool TryGetGroundNormal(out Vector3 normal) {
         if (IsGrounded) {
@@ -145,8 +146,6 @@ public class CollisionCheck : MonoBehaviour {
         float rayDistance = _capsuleCollider.radius + _stepRayOffset;
 
         CheckForStep(feetPos, rayDir, rayDistance);
-        CheckSideForLowObjects(feetPos, rayDistance);
-        CheckSideForLowObjects(feetPos, rayDistance);
     }
 
     void CheckForStep(Vector3 feetPos, Vector3 rayDir, float rayDistance) {
@@ -173,32 +172,7 @@ public class CollisionCheck : MonoBehaviour {
         }
     }
 
-    void CheckSideForLowObjects(Vector3 feetPos, float rayDistance) {
-        if (CheckSide(feetPos, _playerTransform.right, _rayHitsR, rayDistance) ||
-            CheckSide(feetPos, -_playerTransform.right, _rayHitsL, rayDistance)) {
-                if (_playerHasInput) SlideMaterialChange();
-        } else {
-            if (!HasCollided) DefaultMaterialChange();
-        }
-    }
-
-    bool CheckSide(Vector3 origin, Vector3 direction, RaycastHit[] hitsArray, float distance) {
-        float extendDistance = distance + _sidesOffet;
-        int hitCount = Physics.RaycastNonAlloc(origin, direction, hitsArray, extendDistance);
-        bool didHit = TryGetNonPlayerHit(hitsArray, hitCount, out RaycastHit hit);
-        DrawRays(origin, direction, extendDistance, didHit);
-
-        if (didHit) {
-            float angle = Vector3.Angle(hit.normal, Vector3.up);
-            return angle >= _wallAngleThreshold;
-        }
-
-        return false;
-    }
-
     void StepUp(Vector3 targetPoint) {
-        GravityChangeOnStepAsync(_stepGravTime).Forget();
-
         float heightOffset = _capsuleCollider.height * 0.5f;
         float worldOffset = heightOffset * _playerTransform.lossyScale.y;
 
@@ -235,17 +209,6 @@ public class CollisionCheck : MonoBehaviour {
         Gizmos.DrawLine(origin - Vector3.right * radius, endPoint - Vector3.right * radius);
     }
 
-    void MaterialChange() {
-        if (IsGrounded && _onWall) {
-            if (_playerMovement.IsMoving) SlideMaterialChange();
-            else DefaultMaterialChange();
-        } else if (!IsGrounded) {
-            SlideMaterialChange();
-        } else if (IsGrounded && !_onWall) {
-            DefaultMaterialChange();
-        }
-    }
-
     // ? Below could be useful for wall climbing later
     void OnCollisionStay(Collision collision) {
 
@@ -254,16 +217,14 @@ public class CollisionCheck : MonoBehaviour {
             float angle = Vector3.Angle(normal, Vector3.up);
             
             if (angle >= _wallAngleThreshold) {
-                _onWall = true;
-                HasCollided = true;
+                _hasCollided = true;
                 break;
             }
         }
     }
 
     void OnCollisionExit(Collision collision) {
-        _onWall = false;       
-        HasCollided = false;
+        _hasCollided = false;       
     }
 
     // helpers
@@ -284,29 +245,7 @@ public class CollisionCheck : MonoBehaviour {
         return false;
     }
 
-    void SlideMaterialChange() {
-        if (_currentMaterial == _slideMaterial) return;
-        _capsuleCollider.material = _slideMaterial;
-        _currentMaterial = _slideMaterial;
-        _playerMovement.MaxSpeed = _playerMovement.DampenedSpeed;
-        _playerMovement.Momentum = _playerMovement.NonSlideMomentum;
-    }
-
-    void DefaultMaterialChange() {
-        if (_currentMaterial == _defaultMaterial) return;
-        _capsuleCollider.material = _defaultMaterial;
-        _currentMaterial = _defaultMaterial;
-        _playerMovement.MaxSpeed = _playerMovement.BaseSpeed;
-        _playerMovement.Momentum = _playerMovement.BaseMomentum;
-    }
-
     bool CheckPlayerInput() {
         return _playerHasInput = _playerMovement.HasMoveInput();
-    }
-
-    async UniTaskVoid GravityChangeOnStepAsync(float time) {;
-        _rb.useGravity = false;
-        await UniTask.Delay((int)(time * 1000));
-        _rb.useGravity = true;
     }
 }
