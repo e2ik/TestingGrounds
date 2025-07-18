@@ -1,3 +1,4 @@
+using NUnit.Framework;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -58,6 +59,8 @@ public class PlayerMovement : MonoBehaviour {
     private float _lastGroundedTime = 0f;
     private bool _inCoyote = false;
 
+    public bool IsESCPressed = false;
+
     // caches
     private Transform _playerTransform;
     private Transform _cameraTransform;
@@ -79,6 +82,8 @@ public class PlayerMovement : MonoBehaviour {
         _playerInput.actions["Sprint"].started += OnSprint;
         _playerInput.actions["Sprint"].performed += OnSprint;
         _playerInput.actions["Sprint"].canceled += OnSprint;
+
+        _playerInput.actions["CursorLock"].performed += OnCursorLock;
     }
 
     void OnDisable() {
@@ -92,6 +97,8 @@ public class PlayerMovement : MonoBehaviour {
         _playerInput.actions["Sprint"].started -= OnSprint;
         _playerInput.actions["Sprint"].performed -= OnSprint;
         _playerInput.actions["Sprint"].canceled -= OnSprint;
+
+        _playerInput.actions["CursorLock"].performed -= OnCursorLock;
     }
 
     void Start() {
@@ -122,6 +129,14 @@ public class PlayerMovement : MonoBehaviour {
                 velocity -= normal * verticalIntoGround;
                 _rb.linearVelocity = velocity;
             }
+        }
+    }
+
+    void OnCursorLock(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            IsESCPressed = true;
         }
     }
 

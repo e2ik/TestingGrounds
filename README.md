@@ -7,6 +7,8 @@ July 14:
     lifts you up a bit so you're considered ungrounded.
     seems to be a controller issue weird
 
+- Separate player inputs into a separate script
+
 Good Resources:
 
 - https://www.youtube.com/watch?v=maDpJL3go9g

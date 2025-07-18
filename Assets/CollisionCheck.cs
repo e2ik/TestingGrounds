@@ -99,7 +99,7 @@ public class CollisionCheck : MonoBehaviour {
 
             float alignment = Vector3.Dot(hit.normal, Vector3.up);
 
-            Debug.Log("Alignment: " + alignment);
+            // Debug.Log("Alignment: " + alignment);
 
             if (alignment >= minDot) {
                 if (goingUphill) {

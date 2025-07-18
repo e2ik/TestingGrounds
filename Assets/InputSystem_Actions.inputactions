@@ -86,6 +86,15 @@
                     "processors": "",
                     "interactions": "Hold",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "CursorLock",
+                    "type": "Button",
+                    "id": "647727a1-d9bb-4923-8986-e4d3d76470e6",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "Press",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -427,6 +436,28 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Crouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c8b546f6-2aed-4d2c-a4ea-29448fdb6791",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "CursorLock",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "bb9165cd-d46d-4352-b92c-4f04132eb9b9",
+                    "path": "<XRController>{RightHand}/{Cancel}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";XR",
+                    "action": "CursorLock",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
