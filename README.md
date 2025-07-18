@@ -8,6 +8,7 @@ July 14:
     seems to be a controller issue weird
 
 - Separate player inputs into a separate script
+- Fix the jump on slope, right now on slopes there's a bit of angle added, need to zero out if on slope.
 
 Good Resources:
 
