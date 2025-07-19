@@ -541,7 +541,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 80
+  field of view: 60
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -567,8 +567,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.18742062, y: 0.11614646, z: -0.022323348, w: 0.9751334}
-  m_LocalPosition: {x: -1.77, y: 4.679, z: -6.556189}
+  m_LocalRotation: {x: 0.11888937, y: 0.081698604, z: -0.009816245, w: 0.98949194}
+  m_LocalPosition: {x: -1.77, y: 4.679, z: -8.556189}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -836,6 +836,7 @@ GameObject:
   - component: {fileID: 454649713}
   - component: {fileID: 454649712}
   - component: {fileID: 454649706}
+  - component: {fileID: 454649714}
   m_Layer: 0
   m_Name: FreeLook Camera
   m_TagString: Untagged
@@ -918,10 +919,10 @@ MonoBehaviour:
   Radius: 10
   Orbits:
     Top:
-      Radius: 2
-      Height: 3.5
+      Radius: 1
+      Height: 5
     Center:
-      Radius: 3
+      Radius: 5
       Height: 2.25
     Bottom:
       Radius: 3
@@ -982,7 +983,7 @@ MonoBehaviour:
     LookAtTarget: {fileID: 0}
     CustomLookAtTarget: 0
   Lens:
-    FieldOfView: 80
+    FieldOfView: 60
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -1009,8 +1010,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 454649705}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.18742064, y: 0.11614647, z: -0.02232335, w: 0.9751334}
-  m_LocalPosition: {x: -1.77, y: 4.679, z: -6.556189}
+  m_LocalRotation: {x: 0.11888936, y: 0.0816986, z: -0.009816245, w: 0.98949194}
+  m_LocalPosition: {x: -1.77, y: 4.679, z: -8.556189}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1042,7 +1043,7 @@ MonoBehaviour:
     MinimumOcclusionTime: 0
     CameraRadius: 0.4
     UseFollowTarget:
-      Enabled: 0
+      Enabled: 1
       YOffset: 0
     Strategy: 0
     MaximumEffort: 4
@@ -1050,7 +1051,7 @@ MonoBehaviour:
     Damping: 1
     DampingWhenOccluded: 0.2
   ShotQualityEvaluation:
-    Enabled: 0
+    Enabled: 1
     OptimalDistance: 10
     NearLimit: 5
     FarLimit: 30
@@ -1084,6 +1085,21 @@ MonoBehaviour:
     Time: 0.383
     Smoothing: 5
     IgnoreY: 1
+--- !u!114 &454649714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 454649705}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4700f9f03ad19f94baf0367cb7a9c988, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineFollowZoom
+  Width: 2
+  Damping: 0
+  FovRange: {x: 60, y: 60}
 --- !u!1 &598644821
 GameObject:
   m_ObjectHideFlags: 0
@@ -2785,6 +2801,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3dd012f9ace24064f9fe816f811328ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InputManager
+  _freeLookCam: {fileID: 454649710}
+  _mouseSensitivity: 1
+  invertSensitivity: 0
 --- !u!4 &1906415955
 Transform:
   m_ObjectHideFlags: 0

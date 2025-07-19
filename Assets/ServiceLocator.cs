@@ -19,13 +19,22 @@ public static class ServiceLocator {
         if (_services.TryGetValue(type, out var service)) {
             return (T)service;
         }
-        Debug.LogError($"Service of type {type} not found.");
-        return default;
+        throw new InvalidOperationException($"Service of type {type} not found.");
+    }
+
+    public static bool TryGet<T>(out T service) {
+        var type = typeof(T);
+        if (_services.TryGetValue(type, out var obj)) {
+            service = (T)obj;
+            return true;
+        }
+        service = default;
+        return false;
     }
 
     public static void Unregister<T>() {
         var type = typeof(T);
-        if (_services.Remove(type) == false) {
+        if (!_services.Remove(type)) {
             Debug.LogWarning($"Service of type {type} was not registered.");
         }
     }
