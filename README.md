@@ -1,5 +1,4 @@
-July 14:
-
+# July 19:
 - Get some simple Assets start working on animations
 - Might have to create own asset
 
@@ -13,8 +12,8 @@ July 14:
 - Log speed while in air to check the speed (TJ noted can bunny hop)
     > TJ was testing the broken version but test it anyway
 
-Good Resources:
 
+# Good Resources:
 - https://www.youtube.com/watch?v=maDpJL3go9g
     - Talks about a simple Service Locator set up without reliance on singleton
 - https://www.youtube.com/watch?v=bx953Hl6Eu8
