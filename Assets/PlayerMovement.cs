@@ -44,9 +44,12 @@ public class PlayerMovement : MonoBehaviour {
 
     [Header("Misc Settings")]
     public bool FollowCameraRotation = false;
+    public bool AllowSlidingOnLanding = false;
     [SerializeField] private float _coyoteTime = 0.15f;
-    [SerializeField] private float _jumpMultiplier = 0.5f;
+    [SerializeField] private float _jumpMultiplier = 0.8f;
     [SerializeField] private float _customGravity = 9.81f;
+    private bool _useCustomGravity = true;
+    private bool _wasGroundedLastFrame = false;
 
     private Rigidbody _rb;
     private PlayerInput _playerInput;
@@ -109,6 +112,7 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void FixedUpdate() {
+        CheckForLastLandedFrame();
         ApplyCustomGravity();
         UpdateJump();
         UpdateDash();
@@ -117,6 +121,7 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void ApplyCustomGravity() {
+        if (!_useCustomGravity) return;
         if (!_collisionCheck.IsGrounded || _collisionCheck.HasCollided) {
             float verticalVelocity = _rb.linearVelocity.y;
             float gravityMultiplier = verticalVelocity < 0 ? math.clamp(1f + math.abs(verticalVelocity), 1f, 2f) : 1f;
@@ -225,8 +230,10 @@ public class PlayerMovement : MonoBehaviour {
                 if (inputDir == Vector3.zero) {
                     float speed = horizontalVelocity.magnitude;
                     if (speed > 0.5f) {
-                        Vector3 brakingDir = -horizontalVelocity.normalized;
-                        _rb.AddForce(brakingDir * _brakingForce, ForceMode.Acceleration);
+                        float _checkBrakeForce = _isDashing ? 1f : _brakingForce;
+                        Vector3 newVelocity = horizontalVelocity * _checkBrakeForce;
+                        Vector3 verticalVelocity = Vector3.Project(velocity, normal);
+                        _rb.linearVelocity = newVelocity + verticalVelocity;
                     } else {
                         Vector3 verticalVelocity = Vector3.Project(velocity, normal);
                         _rb.linearVelocity = verticalVelocity;
@@ -235,7 +242,6 @@ public class PlayerMovement : MonoBehaviour {
                 } else {
                     Vector3 desiredVelocity = Vector3.ProjectOnPlane(inputDir, normal).normalized * horizontalVelocity.magnitude;
                     Vector3 turnCorrection = desiredVelocity - horizontalVelocity;
-
                     _rb.AddForce(turnCorrection * _turnSharpness, ForceMode.Acceleration);
                 }
             }
@@ -276,7 +282,7 @@ public class PlayerMovement : MonoBehaviour {
         float horizontalSpeed = new Vector3(_rb.linearVelocity.x, 0, _rb.linearVelocity.z).magnitude;
         if (horizontalSpeed < SprintMaxSpeed) {
             if (!DashHasGravity) {
-                _rb.useGravity = false;
+                _useCustomGravity = false;
                 _isDashing = true;
                 _dashStartPos = _playerTransform.position;
                 Vector3 velocity = _rb.linearVelocity;
@@ -332,11 +338,11 @@ public class PlayerMovement : MonoBehaviour {
         if (_isDashing && !DashHasGravity) {
             float dashTravelled = Vector3.Distance(_dashStartPos, _playerTransform.position);
             if (dashTravelled > _dashDistance) {
-                _rb.useGravity = true;
+                _useCustomGravity = true;
                 _isDashing = false;
             } else {
-                if (_collisionCheck.IsGrounded || _collisionCheck.HasCollided) {
-                    _rb.useGravity = true;
+                if (_collisionCheck.HasCollided) {
+                    _useCustomGravity = true;
                     _isDashing = false;
                 }
             }
@@ -355,10 +361,19 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void ApplyJumpForce(float force) {
-        _rb.linearVelocity = new Vector3(_rb.linearVelocity.x, force, _rb.linearVelocity.z);
+        _rb.AddForce(Vector3.up * force, ForceMode.VelocityChange);
     }
 
     public bool HasMoveInput() {
         return _moveDirection.sqrMagnitude > 0.01f;
+    }
+
+    void CheckForLastLandedFrame() {
+        if (AllowSlidingOnLanding) return;
+        bool justLanded = _collisionCheck.IsGrounded && !_wasGroundedLastFrame;
+        if (justLanded) {
+            _rb.linearVelocity = Vector3.zero;
+        }
+        _wasGroundedLastFrame = _collisionCheck.IsGrounded;
     }
 }

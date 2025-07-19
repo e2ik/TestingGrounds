@@ -57,6 +57,7 @@ public class CollisionCheck : MonoBehaviour {
 
     void FixedUpdate() {
         CheckRayCasts();
+        GroundedAndCollided();
     }
 
     public bool CheckIsGrounded() {
@@ -189,6 +190,15 @@ public class CollisionCheck : MonoBehaviour {
 
         _rb.MovePosition(newPos);
     }
+
+        void GroundedAndCollided() {
+            if (_capsuleCollider == null) return;
+
+            if (HasCollided && IsGrounded) {
+                Vector3 backwardDir = -_playerTransform.forward;
+                _rb.AddForce(backwardDir * 0.01f, ForceMode.VelocityChange);
+            }
+        }
 
     void OnDrawGizmos() {
         if (!DrawGizmo || _capsuleCollider == null) return;

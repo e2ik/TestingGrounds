@@ -1547,13 +1547,13 @@ MonoBehaviour:
   <MaxSpeed>k__BackingField: 6
   <SprintMaxSpeed>k__BackingField: 8
   _sprintForce: 12
-  _brakingForce: 30
+  _brakingForce: 0.8
   _turnSharpness: 5
   _airTurnSharpness: 2
   DashHasGravity: 0
   _dashDistance: 2
   <DashAmount>k__BackingField: 1
-  _jumpForce: 8
+  _jumpForce: 4
   _jumpHoldForce: 0.4
   _jumpHoldDuration: 0.35
   CanHoldJump: 1
@@ -1561,8 +1561,9 @@ MonoBehaviour:
   ZeroVelocityOnDoubleJump: 1
   _jumpBufferTime: 0.25
   FollowCameraRotation: 1
+  AllowSlidingOnLanding: 0
   _coyoteTime: 0.15
-  _jumpMultiplier: 1.25
+  _jumpMultiplier: 2
   _customGravity: 20
   IsESCPressed: 0
 --- !u!114 &855627874

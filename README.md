@@ -2,15 +2,7 @@
 - Get some simple Assets start working on animations
 - Might have to create own asset
 
-- fix issue where if you hit a wall and you try to jump, no buffer, no held jump:
-  > lifts you up a bit so you're considered ungrounded.
-  > seems to be a controller issue weird
-
 - Separate player inputs into a separate script
-- Fix the jump on slope, right now on slopes there's a bit of angle added, need to zero out if on slope.
-- Fix dash logic, we are no longer using gravity
-- Log speed while in air to check the speed (TJ noted can bunny hop)
-    > TJ was testing the broken version but test it anyway
 
 
 # Good Resources:
