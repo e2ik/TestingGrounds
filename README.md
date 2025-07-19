@@ -2,9 +2,6 @@
 - Get some simple Assets start working on animations
 - Might have to create own asset
 
-- Separate player inputs into a separate script
-
-
 # Good Resources:
 - https://www.youtube.com/watch?v=maDpJL3go9g
     - Talks about a simple Service Locator set up without reliance on singleton

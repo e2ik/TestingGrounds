@@ -1,8 +1,5 @@
-using NUnit.Framework;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Interactions;
 
 [RequireComponent(typeof(CollisionCheck))]
 public class PlayerMovement : MonoBehaviour {
@@ -36,7 +33,6 @@ public class PlayerMovement : MonoBehaviour {
     private int _jumpCounter = 0; // can add more jumps in future if needed
     private bool _isJumping;
     private float _jumpHoldTimer;
-    private bool _isJumpHeld;
 
     public bool ZeroVelocityOnDoubleJump = false;
     [SerializeField] private float _jumpBufferTime = 0.15f;
@@ -52,17 +48,25 @@ public class PlayerMovement : MonoBehaviour {
     private bool _wasGroundedLastFrame = false;
 
     private Rigidbody _rb;
-    private PlayerInput _playerInput;
     private CollisionCheck _collisionCheck;
     private Vector3 _dashStartPos;
-    private Vector2 _moveDirection;
     public bool IsMoving => _moveDirection != Vector2.zero;
     private bool _isSprinting = false;
     private bool _isDashing = false;
     private float _lastGroundedTime = 0f;
     private bool _inCoyote = false;
 
-    public bool IsESCPressed = false;
+    // Inputs
+    private InputManager _input;
+    public bool IsESCPressed;
+    private Vector2 _moveDirection;
+    private bool _isJumpPressed;
+    private bool _wasJumpPressedLastFrame;
+    private bool _isJumpHeld;
+    private bool _isSprintPressed;
+    private bool _wasSprintPressedLastFrame;
+    private bool _isSprintHeld;
+
 
     // caches
     private Transform _playerTransform;
@@ -70,45 +74,16 @@ public class PlayerMovement : MonoBehaviour {
 
     #endregion
 
-    void Awake() {
-        _playerInput = GetComponent<PlayerInput>();
-    }
-
-    void OnEnable() {
-        _playerInput.actions["Move"].performed += OnMove;
-        _playerInput.actions["Move"].canceled += OnMove;
-
-        _playerInput.actions["Jump"].started += OnJump;
-        _playerInput.actions["Jump"].performed += OnJump;
-        _playerInput.actions["Jump"].canceled += OnJump;
-
-        _playerInput.actions["Sprint"].started += OnSprint;
-        _playerInput.actions["Sprint"].performed += OnSprint;
-        _playerInput.actions["Sprint"].canceled += OnSprint;
-
-        _playerInput.actions["CursorLock"].performed += OnCursorLock;
-    }
-
-    void OnDisable() {
-        _playerInput.actions["Move"].performed -= OnMove;
-        _playerInput.actions["Move"].canceled -= OnMove;
-
-        _playerInput.actions["Jump"].started -= OnJump;
-        _playerInput.actions["Jump"].performed -= OnJump;
-        _playerInput.actions["Jump"].canceled -= OnJump;
-        
-        _playerInput.actions["Sprint"].started -= OnSprint;
-        _playerInput.actions["Sprint"].performed -= OnSprint;
-        _playerInput.actions["Sprint"].canceled -= OnSprint;
-
-        _playerInput.actions["CursorLock"].performed -= OnCursorLock;
-    }
-
     void Start() {
+        _input = ServiceLocator.Get<InputManager>();
         _rb = GetComponent<Rigidbody>();
         _collisionCheck = GetComponent<CollisionCheck>();
         _playerTransform = transform;
         _cameraTransform = Camera.main.transform;
+    }
+
+    void Update() {
+        MapAndHandleInputs();
     }
 
     void FixedUpdate() {
@@ -118,6 +93,24 @@ public class PlayerMovement : MonoBehaviour {
         UpdateDash();
         MovementLogic();
         HandleJumpHoldForce();
+    }
+
+    void MapAndHandleInputs() {
+        _moveDirection = _input.MoveInput;
+        _isJumpPressed = _input.JumpPressed;
+        _isSprintPressed = _input.SprintPressed;
+        _isSprintHeld = _input.SprintHeld;
+        IsESCPressed = _input.CursorLockPressed;
+
+        if (_isJumpPressed && !_wasJumpPressedLastFrame) OnJump();
+        _wasJumpPressedLastFrame = _isJumpPressed;
+        _isJumpHeld = _isJumpPressed;
+
+        if (_isSprintPressed && !_wasSprintPressedLastFrame) PerformDash();
+        _wasSprintPressedLastFrame = _isSprintPressed;
+        _isSprinting = _isSprintHeld;
+
+
     }
 
     void ApplyCustomGravity() {
@@ -137,37 +130,15 @@ public class PlayerMovement : MonoBehaviour {
         }
     }
 
-    void OnCursorLock(InputAction.CallbackContext context)
-    {
-        if (context.performed)
-        {
-            IsESCPressed = true;
-        }
-    }
-
-    void OnMove(InputAction.CallbackContext context) {
-        if (context.performed) {
-            _moveDirection = context.ReadValue<Vector2>();
-        }
-        else if (context.canceled) {
-            _moveDirection = Vector2.zero;
-        }
-    }
-
-    void OnJump(InputAction.CallbackContext context) {
-        if (context.started) _jumpBufferCounter = _jumpBufferTime;
-        if (context.performed) {
-            _isJumpHeld = true;
-            if (_collisionCheck.IsGrounded) {
-                ApplyJumpForce(_jumpForce);
-                StartJumpHold();
-            } else {
-                HandleCoyote();
-                if (CanDoubleJump) HandleDoubleJump();
-            }
-        }
-        if (context.canceled) {
-            _isJumpHeld = false;
+    void OnJump() {
+        _jumpBufferCounter = _jumpBufferTime;
+        _isJumpHeld = true;
+        if (_collisionCheck.IsGrounded) {
+            ApplyJumpForce(_jumpForce);
+            StartJumpHold();
+        } else {
+            HandleCoyote();
+            if (CanDoubleJump) HandleDoubleJump();
         }
     }
 
@@ -190,15 +161,42 @@ public class PlayerMovement : MonoBehaviour {
         }
     }
 
-    void OnSprint(InputAction.CallbackContext context) {
-        if (context.started) PerformDash();
-
-        if (context.performed && context.interaction is HoldInteraction) {
-            _isSprinting = true;
+    void HandleCoyote() {
+        if (Time.time - _lastGroundedTime <= _coyoteTime) {
+            Vector3 velocty = _rb.linearVelocity;
+            if (velocty.y < 0) {
+                ApplyJumpForce(_jumpForce);
+                _inCoyote = true;
+            }
         }
+    }
 
-        if (context.canceled) {
-            _isSprinting = false;
+    void HandleDoubleJump() {
+        if (_jumpCounter >= _jumpAmount) return;
+        if (ZeroVelocityOnDoubleJump) {
+            Vector3 velocty = _rb.linearVelocity;
+            velocty.y = 0f;
+            _rb.linearVelocity = velocty;
+        }
+        ApplyJumpForce(_jumpForce * _jumpMultiplier);
+        if (!_inCoyote) { _jumpCounter++; }
+        else { _inCoyote = false; }
+    }
+
+    void UpdateJump() {
+        if (_jumpBufferCounter > 0) {
+            _jumpBufferCounter -= Time.fixedDeltaTime;
+        }
+        
+        if (_collisionCheck.IsGrounded) {
+            _lastGroundedTime = Time.time;
+            _jumpCounter = 0;
+            _inCoyote = false;
+
+            if (_jumpBufferCounter > 0) {
+                ApplyJumpForce(_jumpForce);
+                _jumpBufferCounter = 0f;
+            }
         }
     }
 
@@ -291,45 +289,6 @@ public class PlayerMovement : MonoBehaviour {
 
             }
             _rb.AddForce(inputDir * _sprintForce, ForceMode.VelocityChange);
-        }
-    }
-
-    void HandleCoyote() {
-        if (Time.time - _lastGroundedTime <= _coyoteTime) {
-            Vector3 velocty = _rb.linearVelocity;
-            if (velocty.y < 0) {
-                ApplyJumpForce(_jumpForce);
-                _inCoyote = true;
-            }
-        }
-    }
-
-    void HandleDoubleJump() {
-        if (_jumpCounter >= _jumpAmount) return;
-        if (ZeroVelocityOnDoubleJump) {
-            Vector3 velocty = _rb.linearVelocity;
-            velocty.y = 0f;
-            _rb.linearVelocity = velocty;
-        }
-        ApplyJumpForce(_jumpForce * _jumpMultiplier);
-        if (!_inCoyote) { _jumpCounter++; }
-        else { _inCoyote = false; }
-    }
-
-    void UpdateJump() {
-        if (_jumpBufferCounter > 0) {
-            _jumpBufferCounter -= Time.fixedDeltaTime;
-        }
-        
-        if (_collisionCheck.IsGrounded) {
-            _lastGroundedTime = Time.time;
-            _jumpCounter = 0;
-            _inCoyote = false;
-
-            if (_jumpBufferCounter > 0) {
-                ApplyJumpForce(_jumpForce);
-                _jumpBufferCounter = 0f;
-            }
         }
     }
 
