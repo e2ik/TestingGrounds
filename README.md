@@ -11,6 +11,7 @@ July 14:
 - Fix the jump on slope, right now on slopes there's a bit of angle added, need to zero out if on slope.
 - Fix dash logic, we are no longer using gravity
 - Log speed while in air to check the speed (TJ noted can bunny hop)
+    > TJ was testing the broken version but test it anyway
 
 Good Resources:
 
