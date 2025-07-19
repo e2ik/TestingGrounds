@@ -10,6 +10,7 @@ July 14:
 - Separate player inputs into a separate script
 - Fix the jump on slope, right now on slopes there's a bit of angle added, need to zero out if on slope.
 - Fix dash logic, we are no longer using gravity
+- Log speed while in air to check the speed (TJ noted can bunny hop)
 
 Good Resources:
 
