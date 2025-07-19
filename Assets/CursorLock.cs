@@ -7,9 +7,13 @@ public class CursorLock : MonoBehaviour
     private string instructionText = "Press ESC to lock/unlock cursor";
     private GUIStyle guiStyle;
     [SerializeField] private PlayerMovement _player;
+    private InputManager _input;
+    private bool _isESCPressed;
+    private bool _wasESCPressedLastFrame;
 
     void Start()
     {
+        _input = ServiceLocator.Get<InputManager>();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
@@ -21,10 +25,11 @@ public class CursorLock : MonoBehaviour
 
     void Update()
     {
-        if (_player.IsESCPressed) {
-            ToggleCursor();
-            _player.IsESCPressed = false;
-        }
+        bool escPressedThisFrame = _input.CursorLockPressed;
+        _isESCPressed = escPressedThisFrame && !_wasESCPressedLastFrame;
+        _wasESCPressedLastFrame = escPressedThisFrame;
+
+        if (_isESCPressed) ToggleCursor();
     }
 
     void OnGUI()

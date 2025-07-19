@@ -1523,7 +1523,7 @@ MonoBehaviour:
   DashHasGravity: 0
   _dashDistance: 2
   <DashAmount>k__BackingField: 1
-  _jumpForce: 4
+  _jumpForce: 3.5
   _jumpHoldForce: 0.4
   _jumpHoldDuration: 0.35
   CanHoldJump: 1
@@ -1533,9 +1533,8 @@ MonoBehaviour:
   FollowCameraRotation: 1
   AllowSlidingOnLanding: 0
   _coyoteTime: 0.15
-  _jumpMultiplier: 2
+  _jumpMultiplier: 2.75
   _customGravity: 20
-  IsESCPressed: 0
 --- !u!114 &855627874
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -35,6 +35,7 @@ public class InputManager : MonoBehaviour {
         _playerInput.actions["Sprint"].canceled += OnSprint;
 
         _playerInput.actions["CursorLock"].performed += OnCursorLock;
+        _playerInput.actions["CursorLock"].canceled += OnCursorLock;
     }
 
     void OnDisable() {
@@ -50,6 +51,7 @@ public class InputManager : MonoBehaviour {
         _playerInput.actions["Sprint"].canceled -= OnSprint;
 
         _playerInput.actions["CursorLock"].performed -= OnCursorLock;
+        _playerInput.actions["CursorLock"].canceled -= OnCursorLock;
     }
 
     void OnMove(InputAction.CallbackContext context) {
@@ -76,6 +78,7 @@ public class InputManager : MonoBehaviour {
 
     void OnCursorLock(InputAction.CallbackContext context) {
         if (context.performed) CursorLockPressed = true;
+        else if (context.canceled) CursorLockPressed = false;
     }
 
 }

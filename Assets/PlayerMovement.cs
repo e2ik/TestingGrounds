@@ -1,3 +1,4 @@
+using NUnit.Framework;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -58,7 +59,6 @@ public class PlayerMovement : MonoBehaviour {
 
     // Inputs
     private InputManager _input;
-    public bool IsESCPressed;
     private Vector2 _moveDirection;
     private bool _isJumpPressed;
     private bool _wasJumpPressedLastFrame;
@@ -100,7 +100,6 @@ public class PlayerMovement : MonoBehaviour {
         _isJumpPressed = _input.JumpPressed;
         _isSprintPressed = _input.SprintPressed;
         _isSprintHeld = _input.SprintHeld;
-        IsESCPressed = _input.CursorLockPressed;
 
         if (_isJumpPressed && !_wasJumpPressedLastFrame) OnJump();
         _wasJumpPressedLastFrame = _isJumpPressed;
@@ -109,8 +108,6 @@ public class PlayerMovement : MonoBehaviour {
         if (_isSprintPressed && !_wasSprintPressedLastFrame) PerformDash();
         _wasSprintPressedLastFrame = _isSprintPressed;
         _isSprinting = _isSprintHeld;
-
-
     }
 
     void ApplyCustomGravity() {
@@ -320,6 +317,10 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void ApplyJumpForce(float force) {
+        Vector3 velocity = _rb.linearVelocity;
+        velocity.y = 0f; // Remove existing vertical momentum
+        _rb.linearVelocity = velocity;
+
         _rb.AddForce(Vector3.up * force, ForceMode.VelocityChange);
     }
 
