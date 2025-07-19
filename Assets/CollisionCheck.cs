@@ -1,6 +1,5 @@
 using UnityEngine;
 using Unity.Mathematics;
-using Cysharp.Threading.Tasks;
 
 public class CollisionCheck : MonoBehaviour {
 
