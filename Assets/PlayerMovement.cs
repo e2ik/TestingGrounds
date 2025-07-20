@@ -33,6 +33,12 @@ public class PlayerMovement : MonoBehaviour {
     private int _jumpCounter = 0; // can add more jumps in future if needed
     private bool _isJumping;
     private float _jumpHoldTimer;
+    private float _jumpStartY;
+    private bool _inDoubleJump;
+    [SerializeField] private bool _clampJumpHeight;
+    [SerializeField] private float _jumpHeight = 1f;
+    [SerializeField] private float _doubleJumpHeight = 2f;
+    private float _currentJumpHeight;
 
     public bool ZeroVelocityOnDoubleJump = false;
     [SerializeField] private float _jumpBufferTime = 0.15f;
@@ -79,6 +85,7 @@ public class PlayerMovement : MonoBehaviour {
         _collisionCheck = GetComponent<CollisionCheck>();
         _playerTransform = transform;
         _cameraTransform = Camera.main.transform;
+        _currentJumpHeight = _jumpHeight;
     }
 
     void Update() {
@@ -92,6 +99,7 @@ public class PlayerMovement : MonoBehaviour {
         UpdateDash();
         MovementLogic();
         HandleJumpHoldForce();
+        ClampJump();
     }
 
     void MapAndHandleInputs() {
@@ -127,6 +135,7 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void OnJump() {
+        _jumpStartY = transform.position.y;
         _jumpBufferCounter = _jumpBufferTime;
         _isJumpHeld = true;
         if (_collisionCheck.IsGrounded) {
@@ -158,10 +167,7 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void HandleCoyote() {
-        if (Time.time - _lastGroundedTime <= _coyoteTime &&
-            _rb.linearVelocity.y < 0 &&
-            _isJumpHeld) 
-        {
+        if (Time.time - _lastGroundedTime <= _coyoteTime && _rb.linearVelocity.y < 0 && _isJumpHeld) {
             StartJumpHold();
             _inCoyote = true;
         }
@@ -169,11 +175,8 @@ public class PlayerMovement : MonoBehaviour {
 
     void HandleDoubleJump() {
         if (_jumpCounter >= _jumpAmount) return;
-        if (ZeroVelocityOnDoubleJump) {
-            Vector3 velocty = _rb.linearVelocity;
-            velocty.y = 0f;
-            _rb.linearVelocity = velocty;
-        }
+        _inDoubleJump = true;
+        if (ZeroVelocityOnDoubleJump) StopVerticalVelocity();
         ApplyJumpForce(_jumpForce * _jumpMultiplier);
         if (_isJumpHeld) StartJumpHold();
         if (!_inCoyote) { _jumpCounter++; }
@@ -189,11 +192,21 @@ public class PlayerMovement : MonoBehaviour {
             _lastGroundedTime = Time.time;
             _jumpCounter = 0;
             _inCoyote = false;
+            _inDoubleJump = false;
 
             if (_jumpBufferCounter > 0) {
                 ApplyJumpForce(_jumpForce);
                 _jumpBufferCounter = 0f;
             }
+        }
+    }
+
+    void ClampJump() {
+        if (!_clampJumpHeight) return;
+        float currentHeight = transform.position.y - _jumpStartY;
+        _currentJumpHeight = _inDoubleJump ? _doubleJumpHeight : _jumpHeight;
+        if (currentHeight >= _currentJumpHeight) {
+            DampenUpwardVelocity(0.75f);
         }
     }
 
@@ -280,10 +293,7 @@ public class PlayerMovement : MonoBehaviour {
                 _useCustomGravity = false;
                 _isDashing = true;
                 _dashStartPos = _playerTransform.position;
-                Vector3 velocity = _rb.linearVelocity;
-                velocity.y = 0;
-                _rb.linearVelocity = velocity;
-
+                StopVerticalVelocity();
             }
             _rb.AddForce(inputDir * _sprintForce, ForceMode.VelocityChange);
         }
@@ -316,10 +326,15 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void ApplyJumpForce(float force) {
-        Vector3 velocity = _rb.linearVelocity;
-        velocity.y = 0f;
-        _rb.linearVelocity = velocity;
+        StopVerticalVelocity();
         _rb.AddForce(Vector3.up * force, ForceMode.VelocityChange);
+
+        float maxVerticalSpeed = force + 0.1f;
+        if (_rb.linearVelocity.y > maxVerticalSpeed) {
+            Vector3 clampedVelocity = _rb.linearVelocity;
+            clampedVelocity.y = maxVerticalSpeed;
+            _rb.linearVelocity = clampedVelocity;
+        }
     }
 
     public bool HasMoveInput() {
@@ -331,5 +346,19 @@ public class PlayerMovement : MonoBehaviour {
         bool justLanded = _collisionCheck.IsGrounded && !_wasGroundedLastFrame;
         if (justLanded) _rb.linearVelocity *= 0;
         _wasGroundedLastFrame = _collisionCheck.IsGrounded;
+    }
+
+    void DampenUpwardVelocity(float multiplier) {
+        Vector3 velocity = _rb.linearVelocity;
+        if (velocity.y > 0) {
+            velocity.y *= multiplier;
+            _rb.linearVelocity = velocity;
+        }
+    }
+
+    void StopVerticalVelocity() {
+        Vector3 velocity = _rb.linearVelocity;
+        velocity.y = 0f;
+        _rb.linearVelocity = velocity;
     }
 }
