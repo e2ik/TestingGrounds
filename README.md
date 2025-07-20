@@ -2,6 +2,11 @@
 - Get some simple Assets start working on animations
 - Might have to create own asset
 
+- Review code look for clean ups
+
+- Need to hook up Input "Zoom"
+    > Try Mouse/KB first, not sure what to set on controller
+
 # Good Resources:
 - https://www.youtube.com/watch?v=maDpJL3go9g
     - Talks about a simple Service Locator set up without reliance on singleton
