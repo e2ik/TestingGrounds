@@ -87,11 +87,8 @@ public class CollisionCheck : MonoBehaviour {
         if (hits == 0) return false;
 
         float minDot = math.cos(math.radians(MaxSlopeAngle));
-
-        Vector3 normalSum = Vector3.zero;
-        int validHitCount = 0;
-        RaycastHit fallbackHit = default;
         float bestAlignment = -1f;
+        bool hasValidHit = false;
 
         for (int i = 0; i < hits; i++) {
             RaycastHit hit = _sphereHits[i];
@@ -99,31 +96,16 @@ public class CollisionCheck : MonoBehaviour {
 
             float alignment = Vector3.Dot(hit.normal, Vector3.up);
 
-            // Debug.Log("Alignment: " + alignment);
-
-            if (alignment >= minDot) {
-                if (goingUphill) {
-                    _lastGroundHit = hit;
-                    return true;
-                } else {
-                    normalSum += hit.normal;
-                    validHitCount++;
-
-                    if (alignment > bestAlignment) {
-                        fallbackHit = hit;
-                        bestAlignment = alignment;
-                    }
-                }
+            if (alignment >= minDot && goingUphill) {
+                _lastGroundHit = hit;
+                return true;
+            } else if (alignment > bestAlignment) {
+                _lastGroundHit = hit;
+                bestAlignment = alignment;
+                hasValidHit = true;
             }
         }
-
-        if (validHitCount > 0) {
-            _lastGroundHit = fallbackHit;
-            _lastGroundHit.normal = normalSum.normalized;
-            return true;
-        }
-
-        return false;
+        return hasValidHit;
     }
 
     public bool TryGetGroundNormal(out Vector3 normal) {
@@ -190,14 +172,14 @@ public class CollisionCheck : MonoBehaviour {
         _rb.MovePosition(newPos);
     }
 
-        void GroundedAndCollided() {
-            if (_capsuleCollider == null) return;
+    void GroundedAndCollided() {
+        if (_capsuleCollider == null) return;
 
-            if (HasCollided && IsGrounded) {
-                Vector3 backwardDir = -_playerTransform.forward;
-                _rb.AddForce(backwardDir * 0.01f, ForceMode.VelocityChange);
-            }
+        if (HasCollided && IsGrounded) {
+            Vector3 backwardDir = -_playerTransform.forward;
+            _rb.AddForce(backwardDir * 0.01f, ForceMode.VelocityChange);
         }
+    }
 
     void OnDrawGizmos() {
         if (!DrawGizmo || _capsuleCollider == null) return;
@@ -220,7 +202,6 @@ public class CollisionCheck : MonoBehaviour {
 
     // ? Below could be useful for wall climbing later
     void OnCollisionStay(Collision collision) {
-
         foreach (ContactPoint contact in collision.contacts) {
             Vector3 normal = contact.normal;
             float angle = Vector3.Angle(normal, Vector3.up);
