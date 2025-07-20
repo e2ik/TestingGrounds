@@ -2,6 +2,8 @@
 - Get some simple Assets start working on animations
 - Might have to create own asset
 
+- Review code look for clean ups
+
 - Need to hook up Input "Zoom"
     > Try Mouse/KB first, not sure what to set on controller
 
