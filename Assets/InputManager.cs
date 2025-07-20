@@ -13,12 +13,20 @@ public class InputManager : MonoBehaviour {
     [SerializeField, Range(0, 5)] private float _mouseSensitivity = 1;
     private float _lastMouseSensitivity;
     [SerializeField] private bool invertSensitivity = false;
+    private float _zoomIncrement = 1.1f;
+    private float _minFOV = 40f;
+    private float _maxFOV = 80f;
+    private float _currentFOV = 60f;
 
     public Vector2 MoveInput { get; private set; }
     public bool JumpPressed { get; private set; }
     public bool SprintPressed { get; private set; }
     public bool SprintHeld { get; private set; }
     public bool CursorLockPressed { get; private set; }
+    public bool ZoomHeld { get; private set; }
+
+    private float _zoomInput;
+    private string _lastZoomDevice;
 
     void Awake() {
         _playerInput = GetComponent<PlayerInput>();
@@ -36,7 +44,7 @@ public class InputManager : MonoBehaviour {
         // TODO: Hook this up to allow zooming
         _followZoom = _freeLookCam.GetComponent<CinemachineFollowZoom>();
         if (_followZoom != null) {
-            _followZoom.FovRange = new Vector2(60f, 60f);
+            _followZoom.FovRange = new Vector2(_currentFOV, _currentFOV);
         }
 
     }
@@ -59,6 +67,11 @@ public class InputManager : MonoBehaviour {
 
         _playerInput.actions["CursorLock"].performed += OnCursorLock;
         _playerInput.actions["CursorLock"].canceled += OnCursorLock;
+
+        _playerInput.actions["Zoom"].performed += OnZoom;
+        _playerInput.actions["Zoom"].canceled += OnZoom;
+        _playerInput.actions["ZoomHeld"].performed += OnZoomHeld;
+        _playerInput.actions["ZoomHeld"].canceled += OnZoomHeld;
     }
 
     void OnDisable() {
@@ -75,12 +88,31 @@ public class InputManager : MonoBehaviour {
 
         _playerInput.actions["CursorLock"].performed -= OnCursorLock;
         _playerInput.actions["CursorLock"].canceled -= OnCursorLock;
+
+        _playerInput.actions["Zoom"].performed -= OnZoom;
+        _playerInput.actions["Zoom"].canceled -= OnZoom;
+        _playerInput.actions["ZoomHeld"].performed -= OnZoomHeld;
+        _playerInput.actions["ZoomHeld"].canceled -= OnZoomHeld;
     }
 
     void Update() {
         if (!Mathf.Approximately(_mouseSensitivity, _lastMouseSensitivity)) {
             UpdateLookSensitivity(_mouseSensitivity);
             _lastMouseSensitivity = _mouseSensitivity;
+        }
+
+        if (Mathf.Abs(_zoomInput) > 0.1f) {
+            float clampedInput = Mathf.Sign(_zoomInput);
+            float zoomIncrement = (_lastZoomDevice != "Mouse") ? _zoomIncrement * 0.1f : _zoomIncrement;
+
+            float newFOV = Mathf.Clamp(_currentFOV + zoomIncrement * clampedInput, _minFOV, _maxFOV);
+            _currentFOV = newFOV;
+
+            if (ZoomHeld || _lastZoomDevice == "Mouse")
+                _followZoom.FovRange = new Vector2(newFOV, newFOV);
+
+            bool usingController = _lastZoomDevice != "Mouse";
+            _axisController.enabled = !(usingController && ZoomHeld);
         }
     }
 
@@ -111,10 +143,24 @@ public class InputManager : MonoBehaviour {
         else if (context.canceled) CursorLockPressed = false;
     }
 
+    void OnZoom(InputAction.CallbackContext context) {
+        _zoomInput = -_playerInput.actions["Zoom"].ReadValue<float>();
+        var device = context.control.device;
+        _lastZoomDevice = device.name;
+    }
+
+    void OnZoomHeld(InputAction.CallbackContext context) {
+        if (context.performed) {
+            ZoomHeld = true;
+        }
+        else if (context.canceled) {
+            ZoomHeld = false;
+        }
+    }
+
     void UpdateLookSensitivity(float sensitivity) {
         if (_axisController != null) {
             foreach (var axis in _axisController.Controllers) {
-                Debug.Log(axis.Name);
                 if (axis.Name == "Look Orbit X") {
                     axis.Input.Gain = sensitivity;
                 }

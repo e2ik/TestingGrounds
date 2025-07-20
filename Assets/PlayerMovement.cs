@@ -158,12 +158,12 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void HandleCoyote() {
-        if (Time.time - _lastGroundedTime <= _coyoteTime) {
-            Vector3 velocty = _rb.linearVelocity;
-            if (velocty.y < 0) {
-                ApplyJumpForce(_jumpForce);
-                _inCoyote = true;
-            }
+        if (Time.time - _lastGroundedTime <= _coyoteTime &&
+            _rb.linearVelocity.y < 0 &&
+            _isJumpHeld) 
+        {
+            StartJumpHold();
+            _inCoyote = true;
         }
     }
 
@@ -175,6 +175,7 @@ public class PlayerMovement : MonoBehaviour {
             _rb.linearVelocity = velocty;
         }
         ApplyJumpForce(_jumpForce * _jumpMultiplier);
+        if (_isJumpHeld) StartJumpHold();
         if (!_inCoyote) { _jumpCounter++; }
         else { _inCoyote = false; }
     }
