@@ -296,12 +296,11 @@ public class PlayerMovement : MonoBehaviour {
             if (dashTravelled > _dashDistance) {
                 _useCustomGravity = true;
                 _isDashing = false;
-            } else {
-                if (_collisionCheck.HasCollided) {
-                    _useCustomGravity = true;
-                    _isDashing = false;
-                }
             }
+        }
+        if (_collisionCheck.HasCollided) {
+            _useCustomGravity = true;
+            _isDashing = false;
         }
     }
 
@@ -318,9 +317,8 @@ public class PlayerMovement : MonoBehaviour {
 
     void ApplyJumpForce(float force) {
         Vector3 velocity = _rb.linearVelocity;
-        velocity.y = 0f; // Remove existing vertical momentum
+        velocity.y = 0f;
         _rb.linearVelocity = velocity;
-
         _rb.AddForce(Vector3.up * force, ForceMode.VelocityChange);
     }
 
@@ -331,9 +329,7 @@ public class PlayerMovement : MonoBehaviour {
     void CheckForLastLandedFrame() {
         if (AllowSlidingOnLanding) return;
         bool justLanded = _collisionCheck.IsGrounded && !_wasGroundedLastFrame;
-        if (justLanded) {
-            _rb.linearVelocity = Vector3.zero;
-        }
+        if (justLanded) _rb.linearVelocity *= 0;
         _wasGroundedLastFrame = _collisionCheck.IsGrounded;
     }
 }
